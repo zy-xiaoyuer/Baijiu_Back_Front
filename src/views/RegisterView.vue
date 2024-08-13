@@ -1,90 +1,113 @@
 <template>
-    <div class="register">
-        <div class="login-wrapper">
-            <div class="header">Register</div>
-            <div class="form-wrapper">
-                <input type="text" name="username" placeholder="账户" class="input-item">
-                <input type="password" name="password" placeholder="密码" class="input-item">
-                <input type="password" name="repassword" placeholder="再次确认密码" class="input-item">
-                <div class="btn">Register</div>
-            </div>
-        </div>
+    <div class="register-container">
+        <el-form ref="registerFormRef" :model="registerUser" :rules="rules" label-width="100px" class="register-form">
+            <div class="form-header">Register</div>
+            <el-form-item label="用户名" prop="username">
+                <el-input v-model="registerUser.username" placeholder="请设置用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="password">
+                <el-input type="password" v-model="registerUser.password"
+                    placeholder="请设置密码"></el-input>
+            </el-form-item>
+            <el-form-item label="确认密码" prop="repassword">
+                <el-input type="password" v-model="registerUser.repassword"
+                    placeholder="请确认密码"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="submitRegisterForm">注册</el-button>
+            </el-form-item>
+        </el-form>
     </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
-    name: "RegisterView"
-}
+    name: "RegisterView",
+    data() {
+        return {
+            registerUser: {
+                username: '',
+                password: '',
+                repassword: ''
+            },
+            rules: {
+                username: [
+                    { required: true, message: 'Please enter your username', trigger: 'blur' }
+                ],
+                password: [
+                    { required: true, message: 'Please enter your password', trigger: 'blur' },
+                    { min: 6, max: 30, message: 'Password length should be between 6 and 30 characters', trigger: 'blur' }
+                ],
+                repassword: [
+                    { required: true, message: 'Please confirm your password', trigger: 'blur' },
+                    { validator: this.confirmPassword, trigger: 'blur' }
+                ]
+            }
+        };
+    },
+    methods: {
+        confirmPassword(rule, value, callback) {
+            if (value !== this.registerUser.password) {
+                callback(new Error('The password does not match'));
+            } else {
+                callback();
+            }
+        },
+        async submitRegisterForm() {
+            this.$refs.registerFormRef.validate((valid) => {
+                if (valid) {
+                    // 发送请求到后端进行注册逻辑
+                    axios.post('/register/api/registerUser', this.registerUser)
+                        .then(response => {
+                            if (response.data.success) {
+                                alert('Registration successful!');
+                                // 注册成功后的逻辑
+                            } else {
+                                alert('Registration failed, please try again!');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Registration request failed:', error);
+                            alert('Registration request failed, please try again later!');
+                        });
+                } else {
+                    console.log('Registration form validation failed!');
+                    return false;
+                }
+            });
+        }
+    }
+};
 </script>
 
 <style scoped>
-html {
-    height: 100%;
-}
-
-body {
-    height: 100%;
-}
-
-.container {
-    /* margin-top: 5%; */
-    height: 980px;
-    width: 100%;
+.register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     background-image: linear-gradient(to right, #fbc2eb, #a6c1ee);
 }
 
-.login-wrapper {
-background-color: #dc9e9e;
+.register-form {
     width: 358px;
-    height: 488px;
+    border: 1px solid #dc9e9e;
     border-radius: 15px;
-    padding: 0 50px;
-    position: absolute;
-    left: 50%;
-    top: 56%;
-    transform: translate(-50%, -50%);
+    padding: 30px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.header {
+.form-header {
     font-size: 38px;
     font-weight: bold;
     text-align: center;
-    line-height: 200px;
-}
-
-.input-item {
-    display: block;
-    width: 100%;
     margin-bottom: 20px;
-    border: 0;
-    padding: 10px;
-    border-bottom: 1px solid rgb(128, 125, 125);
-    font-size: 15px;
-    outline: none;
 }
-
-.input-item:placeholder {
-    text-transform: uppercase;
-}
-
-.btn {
-    text-align: center;
-    padding: 10px;
+.el-button {
     width: 100%;
-    margin-top: 40px;
-    background-image: linear-gradient(to right, #a6c1ee, #fbc2eb);
-    color: #fff;
-    margin: 0 auto;
 }
-
-.msg {
-    text-align: center;
-    line-height: 88px;
-}
-
-a {
-    text-decoration-line: none;
-    color: #abc1ee;
-}
+/* You can add more styles as needed */
 </style>

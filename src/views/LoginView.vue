@@ -1,6 +1,7 @@
 <template>
     <div class="container">
         <el-form ref="ruleFormRef" :model="loginUser" :rules="rules" label-width="100px" class="login-form">
+            <div class="form-header">Login</div>
             <el-form-item label="姓名" prop="name">
                 <el-input v-model="loginUser.name" placeholder="请输入用户名"></el-input>
             </el-form-item>
@@ -46,7 +47,8 @@ export default {
                             .then(response => {
                                 if (response.data === 'ok') {
                                     alert('登录成功！');
-                                    // 可以在这里添加登录成功后的逻辑，如页面跳转  
+                                    
+                                    this.$router.push({ name: 'HomeView' });
                                 } else {
                                     alert('登录失败，用户名或密码错误！');
                                 }
@@ -69,5 +71,36 @@ export default {
 </script>
 
 <style scoped>
-/* 你的样式 */
+.form-header {
+    font-size: 38px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    /* Use viewport height to center the form */
+    margin: 0;
+    padding: 0;
+    background-image: linear-gradient(to right, #fbc2eb, #a6c1ee);
+}
+
+.login-form {
+    width: 358px;
+    border-radius: 15px;
+    padding: 30px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.login-form .el-form-item {
+    margin-bottom: 24px;
+}
+
+.el-button {
+    width: 100%;
+}
 </style>

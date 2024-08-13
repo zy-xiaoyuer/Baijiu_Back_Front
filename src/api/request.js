@@ -2,9 +2,6 @@ import axios from 'axios'
 import {
     ElMessage
 } from 'element-plus'
-// import { diffTokenTime } from '../utils/auth'
-//import store from '../store'
-
 
 // 新建axios的实例对象
 const service = axios.create({

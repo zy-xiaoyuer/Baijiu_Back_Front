@@ -1,19 +1,29 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-    首页
+  <div>
+    <!-- 头部 -->
+    <Header></Header>
+    <div style="display:flex;">
+      <!-- 侧边导航栏 -->
+      <Aside></Aside>
+      <!-- 内容区域 -->
+      <router-view style="flex:1;"></router-view>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-import HelloWorld from '@/components/HelloWorld.vue'; // @ is an alias to /src
+<script>
 
-export default defineComponent({
-  name: 'HomeView',
+import Header from '@/views/HeaderView.vue'
+import Aside from '@/views/AsideView.vue'
+
+export default {
+  name: "HomeView",
   components: {
-    HelloWorld,
-  },
-});
+    Header,
+    Aside
+  }
+
+}
 </script>
+
+<style></style>
