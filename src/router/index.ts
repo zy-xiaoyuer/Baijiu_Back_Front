@@ -1,14 +1,24 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
  import LoginView from '@/views/LoginView.vue'
-import RegisterView from '@/views/RegisterView.vue'
-import UserHomeView from '@/views/UserHomeView.vue'
+import UserList from '@/views/UserHomeView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
+      path: '/',
+      redirect: '/login', // 设置默认路由重定向到登录页
+  },
+  {
+    path: '/home',
     name: 'HomeView',
-    component: HomeView
+    component: HomeView,
+    children: [  
+        {  
+          path: '/userinfo',  
+          component: UserList// 当访问 /home/userinfo 时，显示 UserListView  
+        }  
+        // 其他子路由  
+      ]  
   },
   {
     path: '/about',
@@ -23,16 +33,8 @@ const routes: Array<RouteRecordRaw> = [
     name:'login',
     component:LoginView
   },
-   {
-    path:'/register',
-    name:'register',
-    component:RegisterView
-  },
- {
-    path:'/userinfo',
-    name:'UserInfo',
-    component:UserHomeView
-  },
+ 
+
 
 ]
 

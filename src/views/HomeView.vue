@@ -20,7 +20,7 @@ export default {
   name: "HomeView",
   components: {
     Header,
-    Aside
+    Aside,
   }
 
 }

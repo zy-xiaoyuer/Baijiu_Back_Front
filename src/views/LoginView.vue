@@ -2,8 +2,8 @@
     <div class="container">
         <el-form ref="ruleFormRef" :model="loginUser" :rules="rules" label-width="100px" class="login-form">
             <div class="form-header">Login</div>
-            <el-form-item label="姓名" prop="name">
-                <el-input v-model="loginUser.name" placeholder="请输入用户名"></el-input>
+            <el-form-item label="姓名" prop="username">
+                <el-input v-model="loginUser.username" placeholder="请输入用户名"></el-input>
             </el-form-item>
             <el-form-item label="密码" prop="password">
                 <el-input type="password" v-model="loginUser.password" placeholder="请输入密码"></el-input>
@@ -22,11 +22,11 @@ export default {
     data() {
         return {
             loginUser: {
-                name: '',
+                username: '',
                 password: ''
             },
             rules: {
-                name: [
+                username: [
                     { required: true, message: '请输入用户名', trigger: 'blur' }
                 ],
                 password: [
@@ -43,7 +43,7 @@ export default {
                 this.$refs.ruleFormRef.validate((valid) => {
                     if (valid) {
                         // 发送请求到后端  
-                        axios.post('/user/api/getUserPassword', this.loginUser)
+                        axios.post('/admin/api/getUserPassword', this.loginUser)
                             .then(response => {
                                 if (response.data === 'ok') {
                                     alert('登录成功！');

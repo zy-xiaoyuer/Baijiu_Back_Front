@@ -1,7 +1,7 @@
 <template>
     <div style="height:50px;line-height:50px;
     border-bottom:solid 1px darkcyan;display: flex;">
-        <div style="width: 200px;padding-left:30px;font-weight:bold;color:deepskyblue;">
+        <div style="width: 250px;padding-left:30px;font-weight:bold;color:deepskyblue;">
             白酒数据库后台管理系统
         </div>
         <div style="flex:1;"></div>
@@ -10,7 +10,7 @@
                 <span class="el-dropdown-link">
                     管理员
                     <el-icon class="el-icon--right">
-                        <arrow-down />
+                        <ArrowDown />
                     </el-icon>
                 </span>
                 <template #dropdown>
@@ -26,20 +26,18 @@
 </template>
 
 <script>
+// 导入所需的图标
+import { ArrowDown } from '@element-plus/icons-vue';
 export default {
     name: "HeaderView",
-    methods: {
-        handleCommand(command) {
-            switch (command) {
-                case 'UserInfo':
-                    this.$router.push({ name: 'UserInfo' });
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
+    
+    components: {
+        // 注册图标组件
+        ArrowDown
+    },
 }
 </script>
 
-<style></style>
+<style>
+
+</style>
