@@ -1,11 +1,11 @@
 <template>
   
-  <router-view /> 
-    
-</template>
+    <router-view />
+      
+</template> 
 
 <script>
 
-</script>
+</script> 
 
 <style scoped></style>

@@ -1,8 +1,7 @@
 <template>
-    <div style="padding:10px;">
-        <h1>用户列表页面</h1>
+    <div>
         <!-- 功能区域 -->
-        <div style="margin:10px 0px;">
+        <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
                 </el-icon>新增用户</el-button>
@@ -27,11 +26,11 @@
 
         <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" border>
-            <el-table-column prop="id" label="用户ID" width="180" />
+            <el-table-column prop="id" label="用户ID" />
             <el-table-column prop="username" label="用户名" width="180" />
-            <el-table-column prop="nickname" label="昵称" />
+            <el-table-column prop="nickname" label="昵称" width="180" />
             <el-table-column prop="sex" label="性别" />
-            <el-table-column prop="email" label="邮箱" />
+            <el-table-column prop="email" label="邮箱" width="180" />
             <el-table-column fixed="right" label="操   作" width="300">
                 <el-button type="success" size="small">
                     查看
@@ -117,7 +116,7 @@ export default {
         }
     },
     created() {
-        this.load();
+        //this.load();
     },
     methods: {
         load() {

@@ -1,13 +1,23 @@
+
 <template>
-  <div>
-    <!-- 头部 -->
-    <Header></Header>
-    <div style="display:flex;">
-      <!-- 侧边导航栏 -->
-      <Aside></Aside>
-      <!-- 内容区域 -->
-      <router-view style="flex:1;"></router-view>
-    </div>
+  <div class="common-layout">
+    <!-- 外层容器，用于包裹整个布局 -->
+    <el-container>
+      <!-- 侧边导航栏，占满整个屏幕高度 -->
+      <el-aside width="asideWidth" style="height: 100vh;overflow: hidden;">
+        <Aside :is-collapse="isCollapse"></Aside>
+      </el-aside>
+
+      <el-container :style="{ marginLeft: asideWidth + 'px' }">
+        <el-header>
+          <Header @doCollapse="doCollapse"></Header>
+        </el-header>
+        <!-- 主要内容区域 -->
+        <el-main>
+          <router-view></router-view>
+        </el-main>
+      </el-container>
+    </el-container>
   </div>
 </template>
 
@@ -21,9 +31,30 @@ export default {
   components: {
     Header,
     Aside,
+  },
+  data()
+  {
+    return{
+      isCollapse:false,
+      asideWidth:'200px'
+    }
+  },
+  methods:{
+    doCollapse() {
+      this.isCollapse = !this.isCollapse
+      this.asideWidth = this.isCollapse ? '64px' : '220px';
+    },
+    
+
   }
 
 }
 </script>
 
-<style></style>
+<style>
+.common-layout {
+  height: 100vh;
+  overflow: hidden;
+}
+
+</style>
