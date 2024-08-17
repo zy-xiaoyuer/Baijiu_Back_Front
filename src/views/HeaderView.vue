@@ -1,10 +1,16 @@
 <template>
     <div style="height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;">
-        <div style="display: flex; align-items: center;">
-            <el-icon size="30px" @click="isCollapse ? handleOpen : handleClose">
-                <Expand v-show="!isCollapse" @click="handleClose()" />
-                <Fold v-show="isCollapse" @click="handleOpen()" />
+        <div style="display: flex; align-items: center;cursor:pointer">
+            <el-icon size="30px" @click="collapse">
+                <!-- 使用 v-if 或 v-show 根据 icon prop 来决定显示哪个图标 -->
+                <template v-if="icon === 'Fold'">
+                    <Fold />
+                </template>
+                <template v-else>
+                    <Expand />
+                </template>
             </el-icon>
+
         </div>
 
         <div
@@ -13,7 +19,6 @@
         </div>
 
         <div style="display: flex; align-items: center;">
-
             <div style="width: 40px; height: 40px;">
                 <el-icon>
                     <UserFilled />
@@ -44,12 +49,17 @@
 import { ArrowDown,Expand,Fold, UserFilled} from '@element-plus/icons-vue';
 export default {
     name: "HeaderView",
-    
+    props:{
+        icon: {
+            type: String,
+            required: true
+        }
+    },
     components: {
         // 注册图标组件
         ArrowDown,
-        Expand,
-        Fold,
+        Expand, // 懒加载图标组件
+        Fold,// 懒加载图标组件
         UserFilled
     },
     data() {
@@ -62,13 +72,11 @@ export default {
         {
             console.log("TOUSER")
         },
-        handleOpen() {
-            this.$emit('doCollapse', false); // 假设 true 代表展开  
-            
-        },
-        handleClose() {
-            this.$emit('doCollapse', true); // false 代表收起  
-        }  
+        collapse()
+        {
+            this.$emit('doCollapse');
+        }
+        
         
     }
 }

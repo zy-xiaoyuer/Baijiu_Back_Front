@@ -5,18 +5,11 @@
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
                 </el-icon>新增用户</el-button>
-            <el-button type="danger"><el-icon>
-                    <DocumentDelete />
-                </el-icon>删除用户</el-button>
+
             <el-button type="danger"><el-icon>
                     <Delete />
                 </el-icon>批量删除</el-button>
-            <el-button type="success"><el-icon>
-                    <Edit />
-                </el-icon>修改用户</el-button>
-            <el-button type="info">导入用户</el-button>
-            <el-button type="warning">导出用户</el-button>
-            <el-button type="info">帮助中心</el-button>
+
         </div>
         <!-- 搜索区域 -->
         <div style="margin:10px 0px;">
@@ -25,11 +18,17 @@
         </div>
 
         <!-- 表格数据渲染用户列表信息 -->
-        <el-table :data="tableData" style="width: 100%" border>
+        <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
+            border>
             <el-table-column prop="id" label="用户ID" />
             <el-table-column prop="username" label="用户名" width="180" />
             <el-table-column prop="nickname" label="昵称" width="180" />
-            <el-table-column prop="sex" label="性别" />
+            <el-table-column prop="sex" label="性别">
+                <template v-slot="scope">
+                    <el-tag :type="scope.row.sex === '1' ? 'primary' : 'success'" disable-transitions>{{ scope.row.sex
+                        === '1' ? '男' : '女' }}</el-tag>
+                </template>
+            </el-table-column>
             <el-table-column prop="email" label="邮箱" width="180" />
             <el-table-column fixed="right" label="操   作" width="300">
                 <el-button type="success" size="small">
@@ -45,7 +44,7 @@
         </el-table>
         <!-- 分页列表 -->
         <div style="margin:10px 0px;">
-            <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[2, 5, 10, 20]"
+            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[2, 10, 15, 20]"
                 :small="small" :disabled="disabled" :background="background"
                 layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />
@@ -68,7 +67,7 @@
                         <el-radio v-model="form.sex" label="男" size="large">男</el-radio>
                         <el-radio v-model="form.sex" label="女" size="large">女</el-radio>
                         <el-radio v-model="form.sex" label="未知" size="large">未知</el-radio>
-                    </el-form-item>email
+                    </el-form-item>
                     <el-form-item label="邮  箱:" prop="email">
                         <el-input type="textarea" v-model="form.email" style="width: 80%;" clearable />
                     </el-form-item>
@@ -85,17 +84,20 @@
 </template>
 
 <script>
-import { getData, postData } from "@/utils/requestUtil";
+
+import request from '@/api/request';
 
 
 export default {
     name: "UserHome",
     data() {
+
         return {
             tableData: [],
-            currentPage: 1,
-            pageSize: 2,
+            pageNum: 1,
+            pageSize: 10,
             total: 0,
+
             search: "",
             dialogVisible: false,
             form: {},
@@ -109,63 +111,79 @@ export default {
                 nickname: [
                     { required: true, message: "请输入昵称!", trigger: "blur" }
                 ],
+                sex: [
+                    { required: true, message: "请输入性别!", trigger: "blur" }
+                ],
                 address: [
                     { required: true, message: "请输入邮箱!", trigger: "blur" }
                 ]
             }
         }
     },
-    created() {
-        //this.load();
+    mounted() {
+        this.load();
+
+
     },
+
     methods: {
+
         load() {
-            getData("users/api/loadAll", {
-                pageNum: this.currentPage,
-                pageSize: this.pageSize,
-                search: this.search
-            }).then(res => {
-                // res 已经是 records 数组 
-                this.tableData = res.data;
-                this.total = res.total;
-            });
+            request.post(this.$httpURL + "/users/api/listPageC", {
+                 pageSize:this.pageSize,
+                  pageNum:this.pageNum,
+            })
+                .then(res => {//res已经是data了
+                    console.log(res) 
+                    if (res.code === 200) {
+                        this.tableData = res.data; 
+                        this.total = res.total; 
+                    } else { 
+                        alert('数据获取失败：' + res.msg);
+                    }
+                    
+                })
         },
-        handleSizeChange(pageSize) {
-            this.pageSize = pageSize;
+
+        handleSizeChange(val) {
+            console.log('每页${val}条');
+            this.pageNum=1;
+            this.pageSize = val;
             this.load();
         },
-        handleCurrentChange(pageNum) {
-            this.currentPage = pageNum;
+        handleCurrentChange(val) {
+            console.log('当前页：${val}');
+            this.currentPage = val;
             this.load();
         },
-        add() {
-            //显示对话框
-            this.dialogVisible = true;
-            this.form = {};
-        },
-        save() {
-            //表单提交处理
-            //表单校验处理
-            this.$refs["form"].validate((valid) => {
-                //校验通过发起请求保存用户信息
-                // console.log(valid);
-                if (valid) {
-                    postData("user/api/save", this.form).then(res => {
-                        console.log(res.data);
-                        if (res.data) {
-                            this.load();
-                            this.dialogVisible = false;
-                            this.$message({
-                                message: '成功添加用户信息！',
-                                type: 'success',
-                            });
-                        } else {
-                            //ElMessage.error('添加用户信息失败！');
-                        }
-                    });
-                }
-            });
-        }
+        // add() {
+        //     //显示对话框
+        //     this.dialogVisible = true;
+        //     this.form = {};
+        // },
+        // save() {
+        //     //表单提交处理
+        //     //表单校验处理
+        //     this.$refs["form"].validate((valid) => {
+        //         //校验通过发起请求保存用户信息
+        //         // console.log(valid);
+        //         if (valid) {
+        //             postData("user/api/save", this.form).then(res => {
+        //                 console.log(res.data);
+        //                 if (res.data) {
+        //                     this.load();
+        //                     this.dialogVisible = false;
+        //                     this.$message({
+        //                         message: '成功添加用户信息！',
+        //                         type: 'success',
+        //                     });
+        //                 } else {
+        //                     //ElMessage.error('添加用户信息失败！');
+        //                 }
+        //             });
+        //         }
+        //     });
+        // }
     }
 }
 </script>

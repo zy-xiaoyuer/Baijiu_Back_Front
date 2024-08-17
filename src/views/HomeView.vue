@@ -5,12 +5,12 @@
     <el-container>
       <!-- 侧边导航栏，占满整个屏幕高度 -->
       <el-aside width="asideWidth" style="height: 100vh;overflow: hidden;">
-        <Aside :is-collapse="isCollapse"></Aside>
+        <Aside :isCollapse="isCollapse"></Aside>
       </el-aside>
 
       <el-container :style="{ marginLeft: asideWidth + 'px' }">
         <el-header>
-          <Header @doCollapse="doCollapse"></Header>
+          <Header @doCollapse="doCollapse" :icon="icon"></Header>
         </el-header>
         <!-- 主要内容区域 -->
         <el-main>
@@ -36,13 +36,15 @@ export default {
   {
     return{
       isCollapse:false,
-      asideWidth:'200px'
+      asideWidth:'200px',
+      icon:"Fold"
     }
   },
   methods:{
     doCollapse() {
       this.isCollapse = !this.isCollapse
       this.asideWidth = this.isCollapse ? '64px' : '220px';
+      this.icon = this.isCollapse ? 'Expand' : 'Fold';
     },
     
 
