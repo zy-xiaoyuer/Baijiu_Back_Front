@@ -54,9 +54,6 @@ export default {
 </script>
 
 <style>
-.common-layout {
-  height: 100vh;
-  overflow: hidden;
-}
+
 
 </style>
