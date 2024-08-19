@@ -15,16 +15,14 @@
         <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <el-table-column prop="id" label="酒诗ID" />
-            <el-table-column prop="username" label="用户名" width="180" />
-            <el-table-column prop="nickname" label="昵称" width="180" />
-            <el-table-column prop="sex" label="性别">
+            <el-table-column prop="id" label="酒器ID" />
+            <el-table-column prop="name" label="酒器名" width="180" />
+            <el-table-column prop="discription" label="描述" width="180" />
+            <el-table-column label="酒器图片" width="180">
                 <template v-slot="scope">
-                    <el-tag :type="scope.row.sex === '1' ? 'primary' : 'success'" disable-transitions>{{ scope.row.sex
-                        === '1' ? '男' : '女' }}</el-tag>
+                    <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
                 </template>
             </el-table-column>
-            <el-table-column prop="email" label="邮箱" width="180" />
             <el-table-column fixed="right" label="操 作" width="300">
                 <template v-slot="scope">
                     <el-button type="success" size="small" @click="look(scope.row)">
@@ -179,6 +177,10 @@ export default {
     },
 
     methods: {
+        getImageUrl(imageId) {
+            // 调用后端接口获取图片的URL
+            return this.$httpURL+`/vesselTotal/api/get-image/${imageId}`;
+        },
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
@@ -190,11 +192,11 @@ export default {
         },
 
         load() {
-            request.post("users/api/listPage", {
+            request.post("vesselTotal/api/listPage", {
                 pageSize: this.pageSize,
                 pageNum: this.pageNum,
                 params: {
-                    username: this.search
+                    rname: this.search
                 }
             })
                 .then(res => {//res已经是data了
@@ -245,7 +247,7 @@ export default {
             }
         },
         del(id) {
-            request.get(`users/api/delete?id=${id}`).then(res => {
+            request.get(`vesselTotal/api/delete?id=${id}`).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -267,7 +269,7 @@ export default {
             this.$refs.form.resetFields();
         },
         doSave() {
-            request.post("users/api/save", this.form).then(res => {
+            request.post("vesselTotal/api/save", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -286,7 +288,7 @@ export default {
             });
         },
         doMod() {
-            request.post("users/api/mod", this.form).then(res => {
+            request.post("vesselTotal/api/mod", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({

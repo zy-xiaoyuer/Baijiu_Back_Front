@@ -49,6 +49,13 @@
 import { ArrowDown,Expand,Fold, UserFilled} from '@element-plus/icons-vue';
 export default {
     name: "HeaderView",
+    data()
+    {
+        return{
+            user:JSON.parse(sessionStorage.getItem('CurUser'))
+        }
+
+    },
     props:{
         icon: {
             type: String,
@@ -62,11 +69,7 @@ export default {
         Fold,// 懒加载图标组件
         UserFilled
     },
-    data() {
-        return {
-            
-        };
-    },
+    
     methods:{
         userInfo()
         {

@@ -47,7 +47,7 @@ export default {
                             .then(response => {
                                 if (response.data === 'ok') {
                                     alert('登录成功！');
-                                    
+                                    sessionStorage.setItem("CurUser",JSON.stringify(this.loginUser))
                                     this.$router.push({ name: 'HomeView' });
                                 } else {
                                     alert('登录失败，用户名或密码错误！');
