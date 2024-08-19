@@ -2,6 +2,10 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
  import LoginView from '@/views/LoginView.vue'
 import UserList from '@/views/UserHomeView.vue'
+import Poemview from '@/views/BasicWinePoemView.vue'
+import VesselView from '@/views/WineVesselView.vue'
+import PictureView from '@/views/WinePictureView.vue'
+import LocationWinePoemView from '@/views/LocationWinePoemView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -15,8 +19,24 @@ const routes: Array<RouteRecordRaw> = [
     children: [  
         {  
           path: '/userinfo',  
-          component: UserList// 当访问 /home/userinfo 时，显示 UserListView  
-        }  
+          component: UserList
+        },
+         {  
+          path: '/winepoem',  
+          component: Poemview
+        },
+        {  
+          path: '/winevessel',  
+          component: VesselView 
+        },
+        {  
+          path: '/winepicture',  
+          component:PictureView 
+        },
+        {  
+          path: '/winelocation',  
+          component:LocationWinePoemView
+        },
         // 其他子路由  
       ]  
   },

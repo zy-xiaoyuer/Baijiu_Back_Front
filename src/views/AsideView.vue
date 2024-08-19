@@ -24,10 +24,10 @@
                         </el-icon>
                         <span>赋酒诗词管理</span>
                     </template>
-                    <el-menu-item index="/book">书籍列表</el-menu-item>
-                    <el-menu-item index="2-2">下架书籍</el-menu-item>
+                    <el-menu-item index="/winepoem">酒诗详情概览</el-menu-item>
+                    <el-menu-item index="/winelocation">酒诗地域特色展示</el-menu-item>
                 </el-sub-menu>
-                <el-menu-item index="3">
+                <el-menu-item index="/winevessel">
                     <el-icon>
                         <GobletSquareFull />
                     </el-icon>
@@ -35,7 +35,7 @@
                         <span>酒器管理</span>
                     </template>
                 </el-menu-item>
-                <el-menu-item index="4">
+                <el-menu-item index="/winepicture">
                     <el-icon>
                         <Picture />
                     </el-icon>
