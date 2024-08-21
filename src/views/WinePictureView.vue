@@ -1,6 +1,5 @@
 <template>
     <div>
-        <!-- 功能区域 -->
         <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
@@ -8,35 +7,37 @@
         </div>
         <!-- 搜索区域 -->
         <div style="margin:10px 0px;">
-            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒画" style="width:25%;" :prefix-icon="Search" />
+            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒画名或id" style="width:25%;"
+                :prefix-icon="Search" />
+            <span style="margin-left: 10px;"></span>
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
-
         <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <el-table-column prop="id" label="酒诗ID" />
-            <el-table-column prop="username" label="用户名" width="180" />
-            <el-table-column prop="nickname" label="昵称" width="180" />
-            <el-table-column prop="sex" label="性别">
+            <el-table-column prop="id" label="酒画ID" width="100" />
+            <el-table-column prop="imagename" label="酒画名">
                 <template v-slot="scope">
-                    <el-tag :type="scope.row.sex === '1' ? 'primary' : 'success'" disable-transitions>{{ scope.row.sex
-                        === '1' ? '男' : '女' }}</el-tag>
+                    <span style="font-size: 20px; letter-spacing: 3px;">{{ scope.row.imagename }}</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="email" label="邮箱" width="180" />
-            <el-table-column fixed="right" label="操 作" width="300">
+            <el-table-column prop="image" label="酒画图片">
                 <template v-slot="scope">
-                    <el-button type="success" size="small" @click="look(scope.row)">
+                    <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
+                </template>
+            </el-table-column>
+            <el-table-column fixed="right" label="操 作" width="290">
+                <template v-slot="scope">
+                    <el-button type="success" size="large" @click="look(scope.row)">
                         查看
                     </el-button>
 
                     <el-popconfirm title="确认删除该条信息吗？" @confirm="del(scope.row.id)" style="margin-left:10px">
                         <template #reference>
-                            <el-button type="danger" size="small">删除</el-button>
+                            <el-button type="danger" size="large">删除</el-button>
                         </template>
                     </el-popconfirm>
-                    <el-button type=" primary" size="small" @click="mod(scope.row)">
+                    <el-button type=" primary" size="large" @click="mod(scope.row)">
                         编辑
                     </el-button>
                 </template>
@@ -51,24 +52,22 @@
         </div>
         <!-- 添加用户的对话框 -->
         <div>
-            <el-dialog v-model="dialogVisible" title="用户信息" width="30%" :before-close="handleClose">
-                <!-- 表单数据 -->
+            <el-dialog v-model="dialogVisible" title="酒画信息" style="width:50%;height:80%" h:before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label="用户名:" prop="username">
-                        <el-input v-model="form.username" style="width: 80%;" clearable :disabled="isEditMode" />
+                    <el-form-item label="酒画ID:" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="isEditMode||!isNew"
+                            placeholder="自动生成,不可修改" />
                     </el-form-item>
-                    <el-form-item label="密码:" prop="password">
-                        <el-input v-model="form.password" style="width: 80%;" clearable />
+                    <el-form-item label="酒画名:" prop="imagename">
+                        <el-input v-model="form.imagename" style="width: 80%;" clearable />
                     </el-form-item>
-                    <el-form-item label="昵称:" prop="nickname">
-                        <el-input v-model="form.nickname" style="width: 80%;" clearable />
-                    </el-form-item>
-                    <el-form-item label="性  别:" prop="sex">
-                        <el-radio v-model="form.sex" label="1" size="large">男</el-radio>
-                        <el-radio v-model="form.sex" label="0" size="large">女</el-radio>
-                    </el-form-item>
-                    <el-form-item label="邮  箱:" prop="email">
-                        <el-input type="textarea" v-model="form.email" style="width: 80%;" clearable />
+                    <el-form-item label="酒画:" prop="image">
+                        <el-upload class="upload-demo" action="你的上传URL" :on-preview="handlePreview"
+                            :on-remove="handleRemove" :file-list="fileList" :auto-upload="false"
+                            :on-change="handleChange" :on-success="handleSuccess" :before-upload="beforeUpload">
+                            <el-button v-slot="trigger" size="small" type="primary">选择图片</el-button>
+                            <div slot="tip" class="el-upload__tip">只能上传小于2MB的jpg/png文件</div>
+                        </el-upload>
                     </el-form-item>
                 </el-form>
                 <template #footer>
@@ -86,9 +85,6 @@
 
 import request from '@/api/request';
 
-
-
-
 export default {
     name: "UserHome",
     data() {
@@ -102,7 +98,7 @@ export default {
         };
         let checkDuplicate = (rule, value, callback, el) => {
             let username = el.form.username;
-            request.get(`/users/api/findByUsername?username=${username}`)
+            request.get(`/poemimages/api/findByUsername?username=${username}`)
                 .then(res => {
                     console.log(res);
                     if (res.code === 200) {
@@ -124,15 +120,15 @@ export default {
             isEditMode: false, // 新增这个属性来标记是否为编辑模式  
             search: "",
             dialogVisible: false,
+            isNew: true, // 假设true为新增，false为编辑  
+            lastId: 0, // 用于记录最后一个ID，实际项目中可能需要从服务器获取  
             form: {
                 id: '',
-                username: '',
-                password: '',
-                nickname: '',
-                sex: '1',
-                email: ''
+                imagename: '',
+                image: null, // 这里存储文件信息，但通常不直接存储在form中，而是使用fileList  
 
             },
+            fileList: [], // 存储上传的文件列表  
             rules: {
                 username: [
                     { required: true, message: "请输入用户名!", trigger: "blur" },
@@ -177,8 +173,49 @@ export default {
     mounted() {
         this.load();
     },
-
+    created() {
+        if (this.isNew) {
+            // 假设lastId是从服务器或其他地方获取的最后一个ID  
+            this.form.id = this.lastId + 1;
+        }
+    },  
     methods: {
+        beforeUpload(file) {
+            // 校验文件类型
+            const isJPG = file.type === 'image/jpeg';
+            if (!isJPG) {
+                this.$message.error('只能上传 JPG 格式的文件!');
+            }
+            // 校验文件大小
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isLt2M) {
+                this.$message.error('上传图片大小不能超过 2MB!');
+            }
+            return isJPG && isLt2M;
+        },
+        handleSuccess(response, file, fileList) {
+            this.$message({
+                message: '图片上传成功！',
+                type: 'success'
+            });
+            this.form.image = response.url;
+            this.fileList = [];
+        },
+        handleError(error, file, fileList) {
+            this.$message.error('图片上传失败，请重试！');
+        },
+        handlePreview(file) {
+            console.log('preview', file);
+            // 这里可以添加预览逻辑，比如使用URL.createObjectURL(file.raw)来预览图片  
+        },  
+        handleChange(file, fileList) {
+            console.log('change', file, fileList);
+            this.fileList = fileList;
+        }, 
+        getImageUrl(imageId) {
+            // 调用后端接口获取图片的URL
+            return this.$httpURL + `/poemimages/api/get-image/${imageId}`;
+        },
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
@@ -190,11 +227,11 @@ export default {
         },
 
         load() {
-            request.post("users/api/listPage", {
+            request.post("poemimages/api/listPage", {
                 pageSize: this.pageSize,
                 pageNum: this.pageNum,
                 params: {
-                    username: this.search
+                    rname: this.search
                 }
             })
                 .then(res => {//res已经是data了
@@ -231,21 +268,17 @@ export default {
         mod(row) {
             console.log(row);
             if (row.id) {
-                this.form.id = row.id; // 用于识别编辑操作
-                this.form.username = row.username; // 填充数据，但不允许修改
-                this.form.password = row.password;
-                this.form.nickname = row.nickname;
-                this.form.sex = row.sex + '';
-                this.form.email = row.email;
-                this.isEditMode = true; // 设置为编辑模式  
-                this.dialogVisible = true;
                 this.$nextTick(() => {
-                    this.resetForm();
+                    this.form.id = row.id; // 用于识别编辑操作
+                    this.form.name = row.name; // 填充数据，但不允许修改
+                    this.form.name = row.name; // 填充数据，但不允许修改
+                    this.isEditMode = true; // 设置为编辑模式  
+                    this.dialogVisible = true;
                 })
             }
         },
         del(id) {
-            request.get(`users/api/delete?id=${id}`).then(res => {
+            request.get(`poemimages/api/delete?id=${id}`).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -267,7 +300,7 @@ export default {
             this.$refs.form.resetFields();
         },
         doSave() {
-            request.post("users/api/save", this.form).then(res => {
+            request.post("poemimages/api/save", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -286,7 +319,7 @@ export default {
             });
         },
         doMod() {
-            request.post("users/api/mod", this.form).then(res => {
+            request.post("poemimages/api/mod", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -326,4 +359,9 @@ export default {
 }
 </script>
 
-<style></style>
+<style>
+.el-table .cell {
+    text-align: center;
+    letter-spacing: 8px;
+}
+</style>

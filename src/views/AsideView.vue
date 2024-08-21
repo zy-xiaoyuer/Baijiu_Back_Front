@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="height:100%">
         <el-col :span="24">
             <el-menu style="width:inherit;min-height:100vh;background-color: #f5f7fa;" default-active="/home" router
                 class="el-menu-vertical-demo" :collapse="isCollapse" :collapse-transition="false">
@@ -24,8 +24,8 @@
                         </el-icon>
                         <span>赋酒诗词管理</span>
                     </template>
-                    <el-menu-item index="/winepoem">酒诗详情概览</el-menu-item>
-                    <el-menu-item index="/winelocation">酒诗地域特色展示</el-menu-item>
+                    <el-menu-item index="/winepoem">酒诗列表(朝代)</el-menu-item>
+                    <el-menu-item index="/winelocation">酒诗列表(地域)</el-menu-item>
                 </el-sub-menu>
                 <el-menu-item index="/winevessel">
                     <el-icon>
@@ -74,7 +74,10 @@ export default {
 </script>
 <style>
 .el-menu-vertical-demo {
-
     border-top: 1px solid #9BA4AF;
+    height: 100vh;
+    overflow-y: auto;
+   
 }
+
 </style>

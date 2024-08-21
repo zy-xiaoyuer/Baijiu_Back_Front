@@ -15,9 +15,9 @@
         <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <el-table-column prop="id" label="酒器ID" />
+            <el-table-column prop="id" label="酒器ID" width="70" />
             <el-table-column prop="name" label="酒器名" width="180" />
-            <el-table-column prop="discription" label="描述" width="180" />
+            <el-table-column prop="discription" label="描述" width="330" />
             <el-table-column label="酒器图片" width="180">
                 <template v-slot="scope">
                     <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
@@ -233,16 +233,15 @@ export default {
         mod(row) {
             console.log(row);
             if (row.id) {
-                this.form.id = row.id; // 用于识别编辑操作
-                this.form.username = row.username; // 填充数据，但不允许修改
-                this.form.password = row.password;
-                this.form.nickname = row.nickname;
-                this.form.sex = row.sex + '';
-                this.form.email = row.email;
-                this.isEditMode = true; // 设置为编辑模式  
-                this.dialogVisible = true;
                 this.$nextTick(() => {
-                    this.resetForm();
+                    this.form.id = row.id; // 用于识别编辑操作
+                    this.form.name = row.name; // 填充数据，但不允许修改
+                    this.form.password = row.password;
+                    this.form.nickname = row.nickname;
+                    this.form.sex = row.sex + '';
+                    this.form.email = row.email;
+                    this.isEditMode = true; // 设置为编辑模式  
+                    this.dialogVisible = true;
                 })
             }
         },

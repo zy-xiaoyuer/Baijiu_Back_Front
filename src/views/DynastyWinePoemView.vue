@@ -15,17 +15,16 @@
         <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <el-table-column prop="id" label="酒诗ID" />
-            <el-table-column prop="username" label="用户名" width="180" />
-            <el-table-column prop="nickname" label="昵称" width="180" />
-            <el-table-column prop="sex" label="性别">
-                <template v-slot="scope">
-                    <el-tag :type="scope.row.sex === '1' ? 'primary' : 'success'" disable-transitions>{{ scope.row.sex
-                        === '1' ? '男' : '女' }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="email" label="邮箱" width="180" />
-            <el-table-column fixed="right" label="操 作" width="300">
+            <el-table-column prop="id" label="酒诗ID" width="40" />
+            <el-table-column prop="title" label="标题" width="90" />
+            <el-table-column prop="dynasty" label="朝代" width="60" />
+            <el-table-column prop="author" label="作者" width="50" />
+            <el-table-column prop="place" label="地点" width="50" />
+            <el-table-column prop="time" label="创作年份" width="50" />
+            <el-table-column prop="content" label="内容" width="180" />
+            <el-table-column prop="emotion" label="情感" width="30" />
+            <el-table-column prop="emotionList" label="每句对应情感" width="90" />
+            <el-table-column fixed="right" label="操 作" width="200">
                 <template v-slot="scope">
                     <el-button type="success" size="small" @click="look(scope.row)">
                         查看
@@ -90,7 +89,7 @@ import request from '@/api/request';
 
 
 export default {
-    name: "UserHome",
+    name: "DynastyPoems",
     data() {
         let checkAge = (rule, value, callback) => {
             if (value > 150) {
@@ -102,7 +101,7 @@ export default {
         };
         let checkDuplicate = (rule, value, callback, el) => {
             let username = el.form.username;
-            request.get(`/users/api/findByUsername?username=${username}`)
+            request.get(`/poemsbydynasty/api/findByUsername?username=${username}`)
                 .then(res => {
                     console.log(res);
                     if (res.code === 200) {
@@ -181,7 +180,7 @@ export default {
     methods: {
         handleClose(done) {
             this.$confirm('确认关闭？')
-                .then(_ => {
+                .then(_=> {
                     done();
                 })
                 .catch(_ => {
@@ -190,7 +189,7 @@ export default {
         },
 
         load() {
-            request.post("users/api/listPage", {
+            request.post("poemsbydynasty/api/listPage", {
                 pageSize: this.pageSize,
                 pageNum: this.pageNum,
                 params: {
@@ -245,7 +244,7 @@ export default {
             }
         },
         del(id) {
-            request.get(`users/api/delete?id=${id}`).then(res => {
+            request.get(`poemsbydynasty/api/delete?id=${id}`).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -267,7 +266,7 @@ export default {
             this.$refs.form.resetFields();
         },
         doSave() {
-            request.post("users/api/save", this.form).then(res => {
+            request.post("poemsbydynasty/api/save", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -286,7 +285,7 @@ export default {
             });
         },
         doMod() {
-            request.post("users/api/mod", this.form).then(res => {
+            request.post("poemsbydynasty/api/mod", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({

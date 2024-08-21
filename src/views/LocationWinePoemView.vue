@@ -230,16 +230,16 @@ export default {
         mod(row) {
             console.log(row);
             if (row.id) {
-                this.form.id = row.id; // 用于识别编辑操作
-                this.form.username = row.username; // 填充数据，但不允许修改
-                this.form.password = row.password;
-                this.form.nickname = row.nickname;
-                this.form.sex = row.sex + '';
-                this.form.email = row.email;
-                this.isEditMode = true; // 设置为编辑模式  
-                this.dialogVisible = true;
+                
                 this.$nextTick(() => {
-                    this.resetForm();
+                    this.form.id = row.id; // 用于识别编辑操作
+                    this.form.username = row.username; // 填充数据，但不允许修改
+                    this.form.password = row.password;
+                    this.form.nickname = row.nickname;
+                    this.form.sex = row.sex + '';
+                    this.form.email = row.email;
+                    this.isEditMode = true; // 设置为编辑模式  
+                    this.dialogVisible = true;
                 })
             }
         },

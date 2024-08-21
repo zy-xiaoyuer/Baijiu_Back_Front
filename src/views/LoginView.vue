@@ -16,15 +16,16 @@
 </template>
 
 <script>
-import axios from 'axios'; // 确保你已经在项目中安装了axios  
+import request from '@/api/request';  
 
 export default {
     data() {
         return {
-            loginUser: {
+            loginUser:{
                 username: '',
-                password: ''
+                password: '',
             },
+           
             rules: {
                 username: [
                     { required: true, message: '请输入用户名', trigger: 'blur' }
@@ -40,14 +41,14 @@ export default {
         async submitForm() {
             try {
                 // 使用Element UI的表单验证  
-                this.$refs.ruleFormRef.validate((valid) => {
+                this.$refs.ruleFormRef.validate(async (valid) => {
                     if (valid) {
                         // 发送请求到后端  
-                        axios.post('/admin/api/getUserPassword', this.loginUser)
+                        request.post('/admin/api/getUserPassword', this.loginUser)
                             .then(response => {
-                                if (response.data === 'ok') {
+                                if (response.code === 200) {
                                     alert('登录成功！');
-                                    sessionStorage.setItem("CurUser",JSON.stringify(this.loginUser))
+                                    
                                     this.$router.push({ name: 'HomeView' });
                                 } else {
                                     alert('登录失败，用户名或密码错误！');

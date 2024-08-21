@@ -26,17 +26,17 @@
             </div>
             <el-dropdown>
                 <span class="el-dropdown-link">
-                    管理员
+                    超级管理员
                     <el-icon class="el-icon--right">
                         <ArrowDown />
                     </el-icon>
                 </span>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item command="UserInfo">个人信息</el-dropdown-item>
+                        <el-dropdown-item command="userInfo" v-if="user">个人信息</el-dropdown-item>
                         <el-dropdown-item>修改密码</el-dropdown-item>
                         <el-dropdown-item>退出登录</el-dropdown-item>
-                        <el-dropdown-item>注销登录</el-dropdown-item>
+                        <el-dropdown-item>注销账号</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -46,21 +46,16 @@
 
 <script>
 // 导入所需的图标
-import { ArrowDown,Expand,Fold, UserFilled} from '@element-plus/icons-vue';
+import { ArrowDown, Expand, Fold, UserFilled } from '@element-plus/icons-vue';
 export default {
     name: "HeaderView",
-    data()
-    {
-        return{
-            user:JSON.parse(sessionStorage.getItem('CurUser'))
-        }
-
-    },
-    props:{
+   
+    props: {
         icon: {
             type: String,
             required: true
-        }
+        },
+       
     },
     components: {
         // 注册图标组件
@@ -69,18 +64,27 @@ export default {
         Fold,// 懒加载图标组件
         UserFilled
     },
-    
-    methods:{
-        userInfo()
-        {
-            console.log("TOUSER")
+
+    methods: {
+        userInfo() {
+
+        console.log(this.user);
         },
-        collapse()
-        {
+        logout() {
+        //sessionStorage.removeItem('CurUser');// 清除用户信息
+            //this.$router.push({ name: 'LoginView' });
+
+        },
+        modifyPassword() {
+            
+            //this.$router.push({ name: 'ModifyPasswordView' });
+        },
+
+        collapse() {
             this.$emit('doCollapse');
         }
-        
-        
+
+
     }
 }
 </script>
@@ -88,10 +92,7 @@ export default {
 <style>
 .el-header {
     background-color: #9BA4AF;
-    /* 举例背景颜色，您可以根据设计自行调整 */
     color: white;
-    /* 确保文字颜色与背景色形成对比，易于阅读 */
     line-height: 50px;
 }
-
 </style>

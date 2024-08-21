@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="height:auto">
         <!-- 功能区域 -->
         <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
@@ -210,13 +210,13 @@ export default {
         },
 
         handleSizeChange(val) {
-            console.log('每页${val}条');
+            //console.log('每页${val}条');
             this.pageNum = 1;
             this.pageSize = val;
             this.load();
         },
         handleCurrentChange(val) {
-            console.log('当前页：${val}');
+            //console.log('当前页：${val}');
             this.currentPage = val;
             this.load();
         },
@@ -229,7 +229,7 @@ export default {
 
         },
         mod(row) {
-            console.log(row);
+            //console.log(row);
             if (row.id) {
                 this.$nextTick(() => {
                     this.form.id = row.id; // 用于识别编辑操作
