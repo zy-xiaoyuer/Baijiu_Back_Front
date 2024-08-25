@@ -1,35 +1,28 @@
 <template>
     <div>
-        <!-- 功能区域 -->
         <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
                 </el-icon>新增酒诗</el-button>
         </div>
-        <!-- 搜索区域 -->
         <div style="margin:10px 0px;">
             <el-input v-model="search" clearable placeholder="请输入您要搜索的酒诗" style="width:25%;" :prefix-icon="Search" />
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
-        <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒诗ID" width="40" />
-            <el-table-column prop="title" label="标题" width="90" />
+            <el-table-column prop="title" label="标题" width="100" />
             <el-table-column prop="dynasty" label="朝代" width="60" />
-            <el-table-column prop="author" label="作者" width="50" />
+            <el-table-column prop="author" label="作者" width="60" />
             <el-table-column prop="place" label="地点" width="50" />
             <el-table-column prop="time" label="创作年份" width="50" />
-            <el-table-column prop="content" label="内容" width="180" />
-            <el-table-column prop="emotion" label="情感" width="30" />
+            <el-table-column prop="content" label="内容" />
+            <el-table-column prop="emotion" label="总体情感" width="50" />
             <el-table-column prop="emotionList" label="每句对应情感" width="90" />
             <el-table-column fixed="right" label="操 作" width="200">
                 <template v-slot="scope">
-                    <el-button type="success" size="small" @click="look(scope.row)">
-                        查看
-                    </el-button>
-
                     <el-popconfirm title="确认删除该条信息吗？" @confirm="del(scope.row.id)" style="margin-left:10px">
                         <template #reference>
                             <el-button type="danger" size="small">删除</el-button>
@@ -41,33 +34,41 @@
                 </template>
             </el-table-column>
         </el-table>
-        <!-- 分页列表 -->
+
         <div style="margin:10px 0px;">
-            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[5, 10, 15, 20]"
+            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[4, 8, 12, 16]"
                 :small="small" :disabled="disabled" :background="background"
                 layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />
         </div>
-        <!-- 添加用户的对话框 -->
+
         <div>
-            <el-dialog v-model="dialogVisible" title="用户信息" width="30%" :before-close="handleClose">
-                <!-- 表单数据 -->
+            <el-dialog v-model="dialogVisible" title="酒诗信息" style="height:100%;width:60%;" :before-close="handleClose">
+
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label="用户名:" prop="username">
-                        <el-input v-model="form.username" style="width: 80%;" clearable :disabled="isEditMode" />
+                    <el-form-item label="标题:" prop="title">
+                        <el-input v-model="form.title" style="width: 80%;" clearable />
                     </el-form-item>
-                    <el-form-item label="密码:" prop="password">
-                        <el-input v-model="form.password" style="width: 80%;" clearable />
+                    <el-form-item label="朝代:" prop="dynasty">
+                        <el-input v-model="form.dynasty" style="width: 80%;" clearable />
                     </el-form-item>
-                    <el-form-item label="昵称:" prop="nickname">
-                        <el-input v-model="form.nickname" style="width: 80%;" clearable />
+                    <el-form-item label="作者:" prop="author">
+                        <el-input v-model="form.author" style="width: 80%;" clearable />
                     </el-form-item>
-                    <el-form-item label="性  别:" prop="sex">
-                        <el-radio v-model="form.sex" label="1" size="large">男</el-radio>
-                        <el-radio v-model="form.sex" label="0" size="large">女</el-radio>
+                    <el-form-item label="地点:" prop="place">
+                        <el-input v-model="form.place" style="width: 80%;" clearable />
                     </el-form-item>
-                    <el-form-item label="邮  箱:" prop="email">
-                        <el-input type="textarea" v-model="form.email" style="width: 80%;" clearable />
+                    <el-form-item label="创作年份:" prop="time">
+                        <el-input v-model="form.time" style="width: 80%;" clearable />
+                    </el-form-item>
+                    <el-form-item label="内容:" prop="content">
+                        <el-input type="textarea" v-model="form.content" style="width: 80%;" clearable />
+                    </el-form-item>
+                    <el-form-item label="情感:" prop="emotion">
+                        <el-input v-model="form.emotion" style="width: 80%;" clearable />
+                    </el-form-item>
+                    <el-form-item label="每句对应情感:" prop="emotionList">
+                        <el-input type="textarea" v-model="form.emotionList" style="width: 80%;" clearable />
                     </el-form-item>
                 </el-form>
                 <template #footer>
@@ -85,56 +86,45 @@
 
 import request from '@/api/request';
 
-
-
-
 export default {
     name: "DynastyPoems",
     data() {
-        let checkAge = (rule, value, callback) => {
-            if (value > 150) {
-                callback(new Error('年龄输入过大'));
-            }
-            else {
-                callback();
-            }
-        };
         let checkDuplicate = (rule, value, callback, el) => {
-            let username = el.form.username;
-            request.get(`/poemsbydynasty/api/findByUsername?username=${username}`)
+            let title = el.form.title;
+            request.get(`/poemsbydynasty/api/findByTitle?title=${title}`)
                 .then(res => {
-                    console.log(res);
                     if (res.code === 200) {
-                        callback(new Error('账号已经存在'));
+                        callback(new Error('酒诗已经存在'));
                     } else {
                         callback();
                     }
                 })
                 .catch(() => {
-                    callback(new Error('检查用户名时发生错误'));
+                    callback(new Error('检查酒诗标题时发生错误'));
                 });
         };
-
         return {
             tableData: [],
             pageNum: 1,
             pageSize: 10,
             total: 0,
-            isEditMode: false, // 新增这个属性来标记是否为编辑模式  
+            isEditMode: false, 
             search: "",
             dialogVisible: false,
             form: {
                 id: '',
-                username: '',
-                password: '',
-                nickname: '',
-                sex: '1',
-                email: ''
-
+                title: '',
+                dynasty: '',
+                author: '',
+                place: '',
+                time: '',
+                content:'',
+                emotion:'',
+                emotionList:'',
             },
             rules: {
-                username: [
-                    { required: true, message: "请输入用户名!", trigger: "blur" },
+                title: [
+                    { required: true, message: "请输入酒诗标题!", trigger: "blur" },
                     {
                         validator: (rule, value, callback) => {
                             if (!this.isEditMode) {
@@ -146,30 +136,27 @@ export default {
                         }, trigger: 'blur'
                     }
                 ],
-                password: [
-                    { required: true, message: "请输入密码!", trigger: "blur" }
+                dynasty: [
+                    { required: true, message: "请输入酒诗朝代!", trigger: "blur" }
                 ],
-                nickname: [
-                    { required: true, message: "请输入昵称!", trigger: "blur" }
+                author: [
+                    { required: true, message: "请输入酒诗作者!", trigger: "blur" }
                 ],
-                sex: [
-                    { required: true, message: "请选择性别!", trigger: "blur" }
+                place: [
+                    { message: "请输入酒诗创作地点!", trigger: "blur" }
                 ],
-                email: [
-                    { required: true, message: "请输入邮箱!", trigger: "blur" }
+                time: [
+                    {  message: "请输入酒诗创作时间!", trigger: "blur" }
                 ],
-                // age:[
-                //     {required:true,message:"请输入年龄！",trigger:"blur"},
-                //     {min:1,max:3,message:"长度在1到三位",trigger:"blur"},
-                //     {pattern:/^([1-9][0-9]*){1,3}$/,message:'年龄必须为正整数',trigger:"blur"},
-                //     {validator:checkAge,trigger:'blur'}
-                // ],
-                // phone:[
-                //     { required: true, message: "请输入手机号！", trigger: "blur" },
-                //     { pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: '请输入正确的手机号', trigger: "blur" },
-                // ]
-
-                //年龄和手机号
+                content: [
+                    { required: true, message: "请输入酒诗内容!", trigger: "blur" }
+                ],
+                emotion: [
+                    { required: true, message: "请输入酒诗总体情感!", trigger: "blur" }
+                ],
+                emotionList: [
+                    { required: true, message: "请输入酒诗每句对应情感!", trigger: "blur" }
+                ], 
             }
         }
     },
@@ -193,7 +180,7 @@ export default {
                 pageSize: this.pageSize,
                 pageNum: this.pageNum,
                 params: {
-                    username: this.search
+                    title: this.search
                 }
             })
                 .then(res => {//res已经是data了

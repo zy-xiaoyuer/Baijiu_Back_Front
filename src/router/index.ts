@@ -11,6 +11,7 @@ const routes: Array<RouteRecordRaw> = [
   {
       path: '/',
       redirect: '/login', // 设置默认路由重定向到登录页
+     
   },
   {
     path: '/home',
@@ -40,14 +41,7 @@ const routes: Array<RouteRecordRaw> = [
         // 其他子路由  
       ]  
   },
-  {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
-  },
+  
   {
     path:'/login',
     name:'login',

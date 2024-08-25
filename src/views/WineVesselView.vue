@@ -17,24 +17,24 @@
             border>
             <el-table-column prop="id" label="酒器ID" width="70" />
             <el-table-column prop="name" label="酒器名" width="180" />
-            <el-table-column prop="discription" label="描述" width="330" />
-            <el-table-column label="酒器图片" width="180">
+            <el-table-column prop="discription" label="描述"  />
+            <el-table-column label="酒器图片" >
                 <template v-slot="scope">
                     <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
                 </template>
             </el-table-column>
-            <el-table-column fixed="right" label="操 作" width="300">
+            <el-table-column fixed="right" label="操 作" width="260">
                 <template v-slot="scope">
-                    <el-button type="success" size="small" @click="look(scope.row)">
+                    <el-button type="success" size="large" @click="look(scope.row)">
                         查看
                     </el-button>
 
                     <el-popconfirm title="确认删除该条信息吗？" @confirm="del(scope.row.id)" style="margin-left:10px">
                         <template #reference>
-                            <el-button type="danger" size="small">删除</el-button>
+                            <el-button type="danger" size="large">删除</el-button>
                         </template>
                     </el-popconfirm>
-                    <el-button type=" primary" size="small" @click="mod(scope.row)">
+                    <el-button type=" primary" size="large" @click="mod(scope.row)">
                         编辑
                     </el-button>
                 </template>
@@ -42,7 +42,7 @@
         </el-table>
         <!-- 分页列表 -->
         <div style="margin:10px 0px;">
-            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[5, 10, 15, 20]"
+            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[4, 8, 12, 16]"
                 :small="small" :disabled="disabled" :background="background"
                 layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />

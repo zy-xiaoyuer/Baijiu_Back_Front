@@ -2,7 +2,6 @@
     <div style="height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;">
         <div style="display: flex; align-items: center;cursor:pointer">
             <el-icon size="30px" @click="collapse">
-                <!-- 使用 v-if 或 v-show 根据 icon prop 来决定显示哪个图标 -->
                 <template v-if="icon === 'Fold'">
                     <Fold />
                 </template>
@@ -12,7 +11,6 @@
             </el-icon>
 
         </div>
-
         <div
             style="flex: 1; display: flex; justify-content: center; align-items: center;font-weight:bold;font-size:30px;margin-top:6px">
             白酒数据库后台管理系统
@@ -34,9 +32,8 @@
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item command="userInfo" v-if="user">个人信息</el-dropdown-item>
-                        <el-dropdown-item>修改密码</el-dropdown-item>
-                        <el-dropdown-item>退出登录</el-dropdown-item>
-                        <el-dropdown-item>注销账号</el-dropdown-item>
+                        <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+                        <el-dropdown-item @click="deleteAccount">注销账号</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -45,8 +42,9 @@
 </template>
 
 <script>
-// 导入所需的图标
+
 import { ArrowDown, Expand, Fold, UserFilled } from '@element-plus/icons-vue';
+import request from '@/api/request';
 export default {
     name: "HeaderView",
    
@@ -58,28 +56,28 @@ export default {
        
     },
     components: {
-        // 注册图标组件
         ArrowDown,
-        Expand, // 懒加载图标组件
-        Fold,// 懒加载图标组件
+        Expand, 
+        Fold,
         UserFilled
     },
 
     methods: {
         userInfo() {
-
         console.log(this.user);
         },
         logout() {
-        //sessionStorage.removeItem('CurUser');// 清除用户信息
-            //this.$router.push({ name: 'LoginView' });
-
+            this.$router.push({ name: 'login' });
         },
-        modifyPassword() {
-            
-            //this.$router.push({ name: 'ModifyPasswordView' });
+        deleteAccount() {
+           request.post('admin/api/delete-account',this.user).then(response => {
+                alert('账号已注销');
+                localStorage.removeItem('userToken');
+                this.$router.push({ name: 'login' });
+            }).catch(error => {
+                alert('注销账号失败：' + error.message);
+            });
         },
-
         collapse() {
             this.$emit('doCollapse');
         }

@@ -14,7 +14,9 @@
                     <el-menu-item index="/userinfo">
                         用户列表
                     </el-menu-item>
-                    <el-menu-item index="1-2">禁用用户</el-menu-item>
+                    <el-menu-item index="/userinfo">
+                        禁用用户
+                    </el-menu-item>
                 </el-sub-menu>
 
                 <el-sub-menu index="/wine">
@@ -55,7 +57,6 @@ import { User, Picture, Document, GobletSquareFull } from '@element-plus/icons-v
 export default {
     name: "AsideView",
     components: {
-        
         Document,
         User,
         GobletSquareFull,
@@ -77,7 +78,5 @@ export default {
     border-top: 1px solid #9BA4AF;
     height: 100vh;
     overflow-y: auto;
-   
 }
-
 </style>

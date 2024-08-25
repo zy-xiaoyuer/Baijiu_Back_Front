@@ -1,9 +1,9 @@
 
 <template>
   <div class="common-layout">
-    <!-- 外层容器，用于包裹整个布局 -->
+   
     <el-container style="height:100vh">
-      <!-- 侧边导航栏，占满整个屏幕高度 -->
+      
       <el-aside width="asideWidth" style="height: 100%;overflow: hidden;overflow-y: auto">
         <Aside :isCollapse="isCollapse"></Aside>
       </el-aside>
@@ -12,7 +12,7 @@
         <el-header>
           <Header @doCollapse="doCollapse" :icon="icon" ></Header>
         </el-header>
-        <!-- 主要内容区域 -->
+       
         <el-main>
           <router-view></router-view>
         </el-main>
@@ -47,7 +47,6 @@ export default {
       this.icon = this.isCollapse ? 'Expand' : 'Fold';
     },
     
-
   }
 
 }

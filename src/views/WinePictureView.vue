@@ -45,7 +45,7 @@
         </el-table>
         <!-- 分页列表 -->
         <div style="margin:10px 0px;">
-            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[5, 10, 15, 20]"
+            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[4, 8, 12, 16]"
                 :small="small" :disabled="disabled" :background="background"
                 layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />
@@ -54,19 +54,20 @@
         <div>
             <el-dialog v-model="dialogVisible" title="酒画信息" style="width:50%;height:80%" h:before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label="酒画ID:" prop="id">
-                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="isEditMode||!isNew"
+                    <!-- <el-form-item label="酒画ID:" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="true"
                             placeholder="自动生成,不可修改" />
-                    </el-form-item>
+                    </el-form-item> -->
                     <el-form-item label="酒画名:" prop="imagename">
                         <el-input v-model="form.imagename" style="width: 80%;" clearable />
                     </el-form-item>
                     <el-form-item label="酒画:" prop="image">
-                        <el-upload class="upload-demo" action="你的上传URL" :on-preview="handlePreview"
-                            :on-remove="handleRemove" :file-list="fileList" :auto-upload="false"
-                            :on-change="handleChange" :on-success="handleSuccess" :before-upload="beforeUpload">
-                            <el-button v-slot="trigger" size="small" type="primary">选择图片</el-button>
-                            <div slot="tip" class="el-upload__tip">只能上传小于2MB的jpg/png文件</div>
+                        <el-upload class="avatar-uploader" action="http://localhost:9000/poemimages/api/upload"
+                            :show-file-list="false" :on-success="handleSuccess" :before-upload="beforeUpload">
+                            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
+                            <el-icon v-else class="avatar-uploader-icon">
+                                <Plus />
+                            </el-icon>
                         </el-upload>
                     </el-form-item>
                 </el-form>
@@ -81,34 +82,30 @@
     </div>
 </template>
 
-<script>
+<script >
 
 import request from '@/api/request';
+import { ref } from 'vue'
+import { Plus } from '@element-plus/icons-vue';
+
 
 export default {
-    name: "UserHome",
+    name: "WinePicture",
+    components: { Plus },
     data() {
-        let checkAge = (rule, value, callback) => {
-            if (value > 150) {
-                callback(new Error('年龄输入过大'));
-            }
-            else {
-                callback();
-            }
-        };
         let checkDuplicate = (rule, value, callback, el) => {
-            let username = el.form.username;
-            request.get(`/poemimages/api/findByUsername?username=${username}`)
+            let imagename = el.form.imagename;
+            request.get(`/poemimages/api/findByPictureName?imagename=${imagename}`)
                 .then(res => {
                     console.log(res);
                     if (res.code === 200) {
-                        callback(new Error('账号已经存在'));
+                        callback(new Error('酒画已经存在'));
                     } else {
                         callback();
                     }
                 })
                 .catch(() => {
-                    callback(new Error('检查用户名时发生错误'));
+                    callback(new Error('检查酒画名时发生错误'));
                 });
         };
 
@@ -121,52 +118,27 @@ export default {
             search: "",
             dialogVisible: false,
             isNew: true, // 假设true为新增，false为编辑  
-            lastId: 0, // 用于记录最后一个ID，实际项目中可能需要从服务器获取  
+            maxId: 0, // 用于存储从服务器获取的最大ID
+            imageUrl: ref(''),
             form: {
-                id: '',
+                id: 0,
                 imagename: '',
-                image: null, // 这里存储文件信息，但通常不直接存储在form中，而是使用fileList  
 
             },
-            fileList: [], // 存储上传的文件列表  
             rules: {
-                username: [
-                    { required: true, message: "请输入用户名!", trigger: "blur" },
+                imagename: [
+                    { required: true, message: "请输入酒画名!", trigger: "blur" },
                     {
                         validator: (rule, value, callback) => {
                             if (!this.isEditMode) {
                                 checkDuplicate(rule, value, callback, this);
                             } else {
-
                                 callback();
                             }
                         }, trigger: 'blur'
                     }
                 ],
-                password: [
-                    { required: true, message: "请输入密码!", trigger: "blur" }
-                ],
-                nickname: [
-                    { required: true, message: "请输入昵称!", trigger: "blur" }
-                ],
-                sex: [
-                    { required: true, message: "请选择性别!", trigger: "blur" }
-                ],
-                email: [
-                    { required: true, message: "请输入邮箱!", trigger: "blur" }
-                ],
-                // age:[
-                //     {required:true,message:"请输入年龄！",trigger:"blur"},
-                //     {min:1,max:3,message:"长度在1到三位",trigger:"blur"},
-                //     {pattern:/^([1-9][0-9]*){1,3}$/,message:'年龄必须为正整数',trigger:"blur"},
-                //     {validator:checkAge,trigger:'blur'}
-                // ],
-                // phone:[
-                //     { required: true, message: "请输入手机号！", trigger: "blur" },
-                //     { pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: '请输入正确的手机号', trigger: "blur" },
-                // ]
-
-                //年龄和手机号
+                 
             }
         }
     },
@@ -174,12 +146,30 @@ export default {
         this.load();
     },
     created() {
-        if (this.isNew) {
-            // 假设lastId是从服务器或其他地方获取的最后一个ID  
-            this.form.id = this.lastId + 1;
-        }
-    },  
+        this.getMaxId();
+    },
     methods: {
+        getImageUrl(imageId) {
+            return this.$httpURL + `/poemimages/api/get-image/${imageId}`;
+        },
+       
+        getMaxId() {
+            request.get("poemimages/api/getMaxId").then(response => {
+                if (response.code === 200) {
+                    this.maxId = response.data.id;
+                    if (this.isNew) {
+                        this.form.id = this.maxId + 1;
+                       
+                    }
+                } else {
+                    this.maxId = 0;
+                    this.form.id = 1; // 如果无法获取最大ID，可以默认从1开始
+                }
+            }).catch(error => {
+                this.maxId = 0;
+                this.form.id = 1; // 错误处理，设置默认值
+            });
+        },
         beforeUpload(file) {
             // 校验文件类型
             const isJPG = file.type === 'image/jpeg';
@@ -198,24 +188,15 @@ export default {
                 message: '图片上传成功！',
                 type: 'success'
             });
-            this.form.image = response.url;
-            this.fileList = [];
+            // 假设后端返回的response对象中包含文件的URL
+            console.log(response)
+            this.form.image = response.data.url;
+            this.fileList = []; // 清空文件列表并重新添加文件对象
+            this.fileList.push({ raw: file.raw, url: response.url });
+            // 更新预览的图片URL
+            this.imageUrl = response.url;
         },
-        handleError(error, file, fileList) {
-            this.$message.error('图片上传失败，请重试！');
-        },
-        handlePreview(file) {
-            console.log('preview', file);
-            // 这里可以添加预览逻辑，比如使用URL.createObjectURL(file.raw)来预览图片  
-        },  
-        handleChange(file, fileList) {
-            console.log('change', file, fileList);
-            this.fileList = fileList;
-        }, 
-        getImageUrl(imageId) {
-            // 调用后端接口获取图片的URL
-            return this.$httpURL + `/poemimages/api/get-image/${imageId}`;
-        },
+       
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
@@ -247,21 +228,21 @@ export default {
         },
 
         handleSizeChange(val) {
-            console.log('每页${val}条');
+            //console.log('每页${val}条');
             this.pageNum = 1;
             this.pageSize = val;
             this.load();
         },
         handleCurrentChange(val) {
-            console.log('当前页：${val}');
+            //console.log('当前页：${val}');
             this.currentPage = val;
             this.load();
         },
         add() {
-            //显示对话框
             this.dialogVisible = true;
             this.$nextTick(() => {
                 this.resetForm();
+                //this.form.id = this.getMaxIdPlusOne(); // 确保每次打开对话框时id都是最新的
             })
 
         },
@@ -269,10 +250,10 @@ export default {
             console.log(row);
             if (row.id) {
                 this.$nextTick(() => {
-                    this.form.id = row.id; // 用于识别编辑操作
-                    this.form.name = row.name; // 填充数据，但不允许修改
-                    this.form.name = row.name; // 填充数据，但不允许修改
-                    this.isEditMode = true; // 设置为编辑模式  
+                    this.form.id = row.id; 
+                    this.form.imagename = row.imagename; 
+                    this.form.image = row.image; 
+                    this.isEditMode = true; 
                     this.dialogVisible = true;
                 })
             }
@@ -282,14 +263,14 @@ export default {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
-                        message: '成功删除用户信息！',
+                        message: '成功删除该条酒画信息！',
                         type: 'success',
                     });
                     this.load();
 
                 } else {
                     this.$message({
-                        message: '删除用户信息失败！',
+                        message: '删除酒画信息失败！',
                         type: 'error',
                     });
                 }
@@ -304,7 +285,7 @@ export default {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
-                        message: '成功添加用户信息！',
+                        message: '成功添加一条酒画信息！',
                         type: 'success',
                     });
                     this.dialogVisible = false;
@@ -312,7 +293,7 @@ export default {
                     this.resetForm();
                 } else {
                     this.$message({
-                        message: '添加用户信息失败！',
+                        message: '添加酒画信息失败！',
                         type: 'error',
                     });
                 }
@@ -323,7 +304,7 @@ export default {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
-                        message: '用户信息修改成功！',
+                        message: '酒画信息修改成功！',
                         type: 'success',
                     });
                     this.dialogVisible = false;
@@ -331,7 +312,7 @@ export default {
                     this.resetForm();
                 } else {
                     this.$message({
-                        message: '修改用户信息失败！',
+                        message: '修改酒画信息失败！',
                         type: 'error',
                     });
                 }
@@ -340,12 +321,14 @@ export default {
         },
         save() {
             this.$refs["form"].validate((valid) => {
-                //校验通过发起请求保存用户信息
-                // console.log(valid);
                 if (valid) {
                     if (this.isEditMode) {
                         this.doMod()
                     } else {
+                        // 确保form.image包含上传的图片URL
+                        let formData = new FormData();
+                        formData.append('imagename', this.form.imagename);
+                        formData.append('image', this.form.image); // 假设form.image是文件对象
                         this.doSave();
                     }
                 } else {
@@ -353,7 +336,6 @@ export default {
                     return false;
                 }
             });
-
         }
     }
 }
@@ -363,5 +345,21 @@ export default {
 .el-table .cell {
     text-align: center;
     letter-spacing: 8px;
+}
+.avatar-uploader .el-upload {
+    border: 1px dashed var(--el-border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--el-transition-duration-fast);
+}
+
+.el-icon.avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    text-align: center;
 }
 </style>

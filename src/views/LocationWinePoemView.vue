@@ -16,15 +16,15 @@
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒诗ID" width="40" />
-            <el-table-column prop="fullName" label="地点全称" width="90" />
+            <el-table-column prop="fullName" label="地点全称" width="60" />
             <el-table-column prop="country" label="国家" width="60" />
             <el-table-column prop="province" label="省份" width="50" />
             <el-table-column prop="district" label="区/县" width="50" />
-            <el-table-column prop="poetry" label="酒诗题目" width="130" />
+            <el-table-column prop="poetry" label="酒诗题目" width="120" />
             <el-table-column prop="dynasty" label="朝代" width="30" />
             <el-table-column prop="author" label="作者" width="60" />
-            <el-table-column prop="time" label="创作年份" width="50" />
-            <el-table-column prop="content" label="内容" width="180" />
+            <el-table-column prop="time" label="创作年份" width="30" />
+            <el-table-column prop="content" label="内容"  />
             <el-table-column prop="emotion" label="情感" width="30" />
             <el-table-column prop="coordinates" label="创作地理坐标" width="90" />
             <el-table-column fixed="right" label="操 作" width="200">
@@ -45,7 +45,7 @@
         </el-table>
         <!-- 分页列表 -->
         <div style="margin:10px 0px;">
-            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[5, 10, 15, 20]"
+            <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[4, 8, 12, 16]"
                 :small="small" :disabled="disabled" :background="background"
                 layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />
