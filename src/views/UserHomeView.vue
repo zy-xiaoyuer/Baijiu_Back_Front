@@ -8,6 +8,7 @@
 
         <div style="margin:10px 0px;">
             <el-input v-model="search" clearable placeholder="请输入您要搜索的用户名" style="width:25%;" :prefix-icon="Search" />
+            <span style="margin-left: 10px;"></span>
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
@@ -27,14 +28,15 @@
             <el-table-column prop="email" label="邮箱" />
             <el-table-column fixed="right" label="操 作" width="200">
                 <template v-slot="scope">
+                    <el-button type="success" size="small" @click="look(scope.row)">
+                        查看
+                    </el-button>
                     <el-popconfirm title="确认删除该条信息吗？" @confirm="del(scope.row.id)" style="margin-left:10px">
                         <template #reference>
                             <el-button type="danger" size="small">删除</el-button>
                         </template>
                     </el-popconfirm>
-                    <el-button type="primary" size="small" @click="look(scope.row)">
-                        查看
-                    </el-button>
+
                     <el-button type=" primary" size="small" @click="mod(scope.row)">
                         编辑
                     </el-button>
@@ -77,7 +79,7 @@
                     </el-form-item>
                 </el-form>
                 <template #footer>
-                    <span class="dialog-footer">
+                    <span class="dialog-footer" v-if="isEditMode">
                         <el-button @click="dialogVisible = false">取消</el-button>
                         <el-button type="primary" @click="save">确认</el-button>
                     </span>
@@ -118,8 +120,8 @@ export default {
                         this.dialogVisible = false;
                         this.$nextTick(() => {
                             this.resetForm();
+                        this.isEditMode=false
                         })
-                        this.isEditMode = false;
                     })
                     done();
                 })
@@ -160,7 +162,7 @@ export default {
             this.load();
         },
         add() {
-            this.isEditMode = false; 
+            this.isEditMode = true;
             this.dialogVisible = true;
             this.$nextTick(() => {
                 this.resetForm();
@@ -302,7 +304,7 @@ export default {
         return {
             tableData: [],
             pageNum: 1,
-            pageSize: 10,
+            pageSize: 8,
             total: 0,
             isEditMode: false, //false:查看；true：编辑
             search: "",

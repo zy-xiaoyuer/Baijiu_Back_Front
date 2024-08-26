@@ -117,7 +117,7 @@ export default {
         return {
             tableData: [],
             pageNum: 1,
-            pageSize: 10,
+            pageSize: 8,
             total: 0,
             isEditMode: false, // 新增这个属性来标记是否为编辑模式  
             search: "",

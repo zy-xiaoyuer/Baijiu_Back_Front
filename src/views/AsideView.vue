@@ -4,20 +4,14 @@
             <el-menu style="width:inherit;min-height:100vh;background-color: #f5f7fa;" default-active="/home" router
                 class="el-menu-vertical-demo" :collapse="isCollapse" :collapse-transition="false">
 
-                <el-sub-menu index="/home">
+                <el-menu-item index="/userinfo">
+                    <el-icon>
+                        <User />
+                    </el-icon>
                     <template #title>
-                        <el-icon>
-                            <User />
-                        </el-icon>
                         <span>用户管理</span>
                     </template>
-                    <el-menu-item index="/userinfo">
-                        用户列表
-                    </el-menu-item>
-                    <el-menu-item index="/userinfo">
-                        禁用用户
-                    </el-menu-item>
-                </el-sub-menu>
+                </el-menu-item>
 
                 <el-sub-menu index="/wine">
                     <template #title>

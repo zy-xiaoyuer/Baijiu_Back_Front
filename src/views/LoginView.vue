@@ -39,26 +39,22 @@ export default {
     methods: {
         async submitForm() {
             try {
-                // 使用Element UI的表单验证  
                 this.$refs.ruleFormRef.validate(async (valid) => {
                     if (valid) {
-                        // 发送请求到后端  
                         request.post('/admin/api/getUserPassword', this.loginUser)
                             .then(response => {
                                 if (response.code === 200) {
                                     alert('登录成功！');
-                                    
                                     this.$router.push({ name: 'HomeView' });
                                 } else {
                                     alert('登录失败，用户名或密码错误！');
                                 }
                             })
                             .catch(error => {
-                                console.error('登录请求失败:', error);
+                                console.log(error);
                                 alert('登录请求失败，请稍后再试！');
                             });
                     } else {
-                        console.log('表单验证失败！');
                         return false;
                     }
                 });
@@ -82,22 +78,23 @@ export default {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    /* Use viewport height to center the form */
     margin: 0;
     padding: 0;
     background-image: linear-gradient(to right, #fbc2eb, #a6c1ee);
 }
 
 .login-form {
-    width: 358px;
+    width: 350px;
     border-radius: 15px;
-    padding: 30px;
+    padding: 10px;
     background: #ffffff;
     box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 .login-form .el-form-item {
     margin-bottom: 24px;
+    margin-right: 35px;
+
 }
 
 .el-button {

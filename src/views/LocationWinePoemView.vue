@@ -1,18 +1,19 @@
 <template>
     <div>
-        <!-- 功能区域 -->
         <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
                 </el-icon>新增酒诗</el-button>
         </div>
-        <!-- 搜索区域 -->
+
         <div style="margin:10px 0px;">
-            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒诗信息" style="width:25%;" :prefix-icon="Search" />
+            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒诗的作者或朝代" style="width:25%;"
+                :prefix-icon="Search" />
+            <span style="margin-left: 10px;"></span>
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
-        <!-- 表格数据渲染用户列表信息 -->
+
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒诗ID" width="40" />
@@ -24,7 +25,7 @@
             <el-table-column prop="dynasty" label="朝代" width="30" />
             <el-table-column prop="author" label="作者" width="60" />
             <el-table-column prop="time" label="创作年份" width="30" />
-            <el-table-column prop="content" label="内容"  />
+            <el-table-column prop="content" label="内容" />
             <el-table-column prop="emotion" label="情感" width="30" />
             <el-table-column prop="coordinates" label="创作地理坐标" width="90" />
             <el-table-column fixed="right" label="操 作" width="200">
@@ -43,38 +44,55 @@
                 </template>
             </el-table-column>
         </el-table>
-        <!-- 分页列表 -->
+
         <div style="margin:10px 0px;">
             <el-pagination v-model:current-page="pageNum" v-model:page-size="pageSize" :page-sizes="[4, 8, 12, 16]"
                 :small="small" :disabled="disabled" :background="background"
                 layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
                 @current-change="handleCurrentChange" />
         </div>
-        <!-- 添加用户的对话框 -->
+
         <div>
-            <el-dialog v-model="dialogVisible" title="诗歌信息" width="30%" :before-close="handleClose">
-                <!-- 表单数据 -->
+            <el-dialog v-model="dialogVisible" title="酒诗信息" width="30%" :before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label="地点全称:" prop="full_name">
-                        <el-input v-model="form.full_name" style="width: 80%;" clearable :disabled="isEditMode" />
+                    <el-form-item label="地点全称:" prop="fullName">
+                        <el-input v-model="form.fullName" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="国家:" prop="country">
-                        <el-input v-model="form.country" style="width: 80%;" clearable />
+                        <el-input v-model="form.country" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
 
                     <el-form-item label="省份:" prop="province">
-                        <el-input v-model="form.province" style="width: 80%;" clearable />
+                        <el-input v-model="form.province" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="区/县:" prop="district">
-                        <el-radio v-model="form.district" label="1" size="large">男</el-radio>
-                        <el-radio v-model="form.district" label="0" size="large">女</el-radio>
+                        <el-input v-model="form.district" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒诗题目:" prop="poetry">
-                        <el-input type="textarea" v-model="form.poetry" style="width: 80%;" clearable />
+                        <el-input v-model="form.poetry" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
+                    <el-form-item label="朝代：" prop="dynasty">
+                        <el-input v-model="form.dynasty" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
+                    <el-form-item label="作者:" prop="author">
+                        <el-input v-model="form.author" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
+                    <el-form-item label="创作年份:" prop="time">
+                        <el-input v-model="form.time" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
+                    <el-form-item label="内容:" prop="content">
+                        <el-input type="textarea" v-model="form.content" style="width: 80%;" clearable
+                            :disabled="!isEditMode" />
+                    </el-form-item>
+                    <el-form-item label="情感:" prop="emotion">
+                        <el-input v-model="form.emotion" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
+                    <el-form-item label="创作地理坐标:" prop="coordinates">
+                        <el-input v-model="form.coordinates" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                 </el-form>
                 <template #footer>
-                    <span class="dialog-footer">
+                    <span class="dialog-footer" v-if="isEditMode">
                         <el-button @click="dialogVisible = false">取消</el-button>
                         <el-button type="primary" @click="save">确认</el-button>
                     </span>
@@ -88,35 +106,16 @@
 
 import request from '@/api/request';
 
-
-
-
 export default {
     name: "LocationPoem",
     data() {
         
-        let checkDuplicate = (rule, value, callback, el) => {
-            let poetry = el.form.poetry;
-            request.get(`/users/api/findByUsername?username=${poetry}`)
-                .then(res => {
-                    console.log(res);
-                    if (res.code === 200) {
-                        callback(new Error('酒诗已经存在'));
-                    } else {
-                        callback();
-                    }
-                })
-                .catch(() => {
-                    callback(new Error('检查酒诗题目时发生错误'));
-                });
-        };
-
         return {
             tableData: [],
             pageNum: 1,
-            pageSize: 10,
+            pageSize: 8,
             total: 0,
-            isEditMode: false, // 新增这个属性来标记是否为编辑模式  
+            isEditMode: false, 
             search: "",
             dialogVisible: false,
             form: {
@@ -134,42 +133,51 @@ export default {
             },
             rules: {
                 fullName: [
-                    { required: true, message: "请输入用户名!", trigger: "blur" },
+                    { required: true, message: "请输入酒诗地点全称!", trigger: "blur" },
+                   
+                ],
+                country: [
+                    { required: true, message: "请输入作诗国家!", trigger: "blur" }
+                ],
+                province: [
+                    { required: true, message: "请输入作诗省份!", trigger: "blur" }
+                ],
+                district: [
+                    {  message: "请选择作诗区/县!", trigger: "blur" }
+                ],
+                poetry: [
+                    { required: true, message: "请输入酒诗题目!", trigger: "blur" },
                     {
                         validator: (rule, value, callback) => {
-                            if (!this.isEditMode) {
-                                checkDuplicate(rule, value, callback, this);
-                            } else {
-
-                                callback();
-                            }
+                            this.checkDuplicatePoetry(value, (err) => {
+                                if (err) {
+                                    callback(new Error('酒诗已经存在'));
+                                } else {
+                                    callback();
+                                }
+                            });
                         }, trigger: 'blur'
                     }
                 ],
-                password: [
-                    { required: true, message: "请输入密码!", trigger: "blur" }
+                dynasty: [
+                    { required: true, message: "请输入酒诗朝代!", trigger: "blur" }
                 ],
-                nickname: [
-                    { required: true, message: "请输入昵称!", trigger: "blur" }
+                author: [
+                    { required: true, message: "请输入酒诗作者!", trigger: "blur" }
                 ],
-                sex: [
-                    { required: true, message: "请选择性别!", trigger: "blur" }
+                time: [
+                    { required: true, message: "请输入酒诗创作年份!", trigger: "blur" }
                 ],
-                email: [
-                    { required: true, message: "请输入邮箱!", trigger: "blur" }
+                content: [
+                    { required: true, message: "请输入酒诗内容!", trigger: "blur" }
                 ],
-                // age:[
-                //     {required:true,message:"请输入年龄！",trigger:"blur"},
-                //     {min:1,max:3,message:"长度在1到三位",trigger:"blur"},
-                //     {pattern:/^([1-9][0-9]*){1,3}$/,message:'年龄必须为正整数',trigger:"blur"},
-                //     {validator:checkAge,trigger:'blur'}
-                // ],
-                // phone:[
-                //     { required: true, message: "请输入手机号！", trigger: "blur" },
-                //     { pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: '请输入正确的手机号', trigger: "blur" },
-                // ]
-
-                //年龄和手机号
+               emotion: [
+                    { required: true, message: "请输入酒诗情感!", trigger: "blur" }
+                ],
+                coordinates: [
+                    { required: true, message: "请输入酒诗创作地理坐标(格式:[25,25])!", trigger: "blur" }
+                ],
+                
             }
         }
     },
@@ -178,9 +186,26 @@ export default {
     },
 
     methods: {
+        checkDuplicatePoetry(poetry, callback) {
+            request.get(`/poemsbylocation/api/findByPoetry?poetry=${poetry}`)
+                .then(res => {
+                    if (res.code === 200) {
+                        callback(new Error('酒诗已经存在'));
+                    } else {
+                        callback();
+                    }
+                })
+                .catch(() => {
+                    callback(new Error('检查酒诗标题时发生错误'));
+                });
+        },
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
+                    this.dialogVisible = false;
+                    this.$nextTick(() => {
+                        this.resetForm();
+                    })
                     done();
                 })
                 .catch(_ => {
@@ -193,7 +218,7 @@ export default {
                 pageSize: this.pageSize,
                 pageNum: this.pageNum,
                 params: {
-                    poetry: this.search
+                    search: this.search
                 }
             })
                 .then(res => {//res已经是data了
@@ -209,7 +234,7 @@ export default {
         },
 
         handleSizeChange(val) {
-            console.log('每页${val}条');
+            //console.log('每页${val}条');
             this.pageNum = 1;
             this.pageSize = val;
             this.load();
@@ -220,7 +245,7 @@ export default {
             this.load();
         },
         add() {
-            //显示对话框
+            this.isEditMode = true;
             this.dialogVisible = true;
             this.$nextTick(() => {
                 this.resetForm();
@@ -228,34 +253,61 @@ export default {
 
         },
         mod(row) {
-            console.log(row);
+            //console.log(row);
             if (row.id) {
-                
                 this.$nextTick(() => {
-                    this.form.id = row.id; // 用于识别编辑操作
-                    this.form.username = row.username; // 填充数据，但不允许修改
-                    this.form.password = row.password;
-                    this.form.nickname = row.nickname;
-                    this.form.sex = row.sex + '';
-                    this.form.email = row.email;
-                    this.isEditMode = true; // 设置为编辑模式  
+                    this.isEditMode = true; 
+                    this.form.id = row.id; 
+                    this.form.fullName = row.fullName; 
+                    this.form.country= row.country;
+                    this.form.province = row.province;
+                    this.form.district = row.district;
+                    this.form.poetry = row.poetry;
+                    this.form.dynasty = row.dynasty;
+                    this.form.author = row.author;
+                    this.form.time = row.time;
+                    this.form.content = row.content;
+                    this.form.emotion = row.emotion;
+                    this.form.coordinates = row.coordinates;
                     this.dialogVisible = true;
                 })
             }
+        },
+        look(row)
+        {
+            if(row.id){
+                this.$nextTick(() => {
+                    this.isEditMode = false;
+                    this.form.id = row.id;
+                    this.form.fullName = row.fullName;
+                    this.form.country = row.country;
+                    this.form.province = row.province;
+                    this.form.district = row.district;
+                    this.form.poetry = row.poetry;
+                    this.form.dynasty = row.dynasty;
+                    this.form.author = row.author;
+                    this.form.time = row.time;
+                    this.form.content = row.content;
+                    this.form.emotion = row.emotion;
+                    this.form.coordinates = row.coordinates;
+                    this.dialogVisible = true;
+                })
+
+        }
         },
         del(id) {
             request.get(`poemsbylocation/api/delete?id=${id}`).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
-                        message: '成功删除用户信息！',
+                        message: '成功删除酒诗信息！',
                         type: 'success',
                     });
                     this.load();
 
                 } else {
                     this.$message({
-                        message: '删除用户信息失败！',
+                        message: '删除酒诗信息失败！',
                         type: 'error',
                     });
                 }
@@ -266,48 +318,60 @@ export default {
             this.$refs.form.resetFields();
         },
         doSave() {
-            request.post("poemsbylocation/api/save", this.form).then(res => {
-                console.log(res);
-                if (res.code === 200) {
-                    this.$message({
-                        message: '成功添加用户信息！',
-                        type: 'success',
+            this.checkDuplicatePoetry(this.form.poetry, (isUnique) => {
+                if (isUnique) {
+                    request.post("poemsbylocation/api/save", this.form).then(res => {
+                        console.log(res);
+                        if (res.code === 200) {
+                            this.$message({
+                                message: '成功添加酒诗信息！',
+                                type: 'success',
+                            });
+                            this.dialogVisible = false;
+                            this.load();
+                            this.resetForm();
+                        } else {
+                            this.$message({
+                                message: '添加酒诗信息失败！',
+                                type: 'error',
+                            });
+                        }
                     });
-                    this.dialogVisible = false;
-                    this.load();
-                    this.resetForm();
                 } else {
-                    this.$message({
-                        message: '添加用户信息失败！',
-                        type: 'error',
-                    });
+                    alert('酒诗已存在');
                 }
             });
+           
         },
         doMod() {
-            request.post("poemsbylocation/api/mod", this.form).then(res => {
-                console.log(res);
-                if (res.code === 200) {
-                    this.$message({
-                        message: '用户信息修改成功！',
-                        type: 'success',
+            this.checkDuplicatePoetry(this.form.poetry, (isUnique) => {
+                if (isUnique) {
+                    request.post("poemsbylocation/api/mod", this.form).then(res => {
+                        console.log(res);
+                        if (res.code === 200) {
+                            this.$message({
+                                message: '成功修改酒诗信息！',
+                                type: 'success',
+                            });
+                            this.dialogVisible = false;
+                            this.load();
+                            this.resetForm();
+                        } else {
+                            this.$message({
+                                message: '修改酒诗信息失败！',
+                                type: 'error',
+                            });
+                        }
                     });
-                    this.dialogVisible = false;
-                    this.load();
-                    this.resetForm();
                 } else {
-                    this.$message({
-                        message: '修改用户信息失败！',
-                        type: 'error',
-                    });
+                    alert('酒诗已存在');
                 }
             });
 
         },
         save() {
             this.$refs["form"].validate((valid) => {
-                //校验通过发起请求保存用户信息
-                // console.log(valid);
+                
                 if (valid) {
                     if (this.isEditMode) {
                         this.doMod()

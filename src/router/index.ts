@@ -6,6 +6,7 @@ import Poemview from '@/views/DynastyWinePoemView.vue'
 import VesselView from '@/views/WineVesselView.vue'
 import PictureView from '@/views/WinePictureView.vue'
 import LocationWinePoemView from '@/views/LocationWinePoemView.vue'
+import WelcomeView from '@/views/WelcomeView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -38,7 +39,10 @@ const routes: Array<RouteRecordRaw> = [
           path: '/winelocation',  
           component:LocationWinePoemView
         },
-        // 其他子路由  
+        {  
+          path:'',  //默认子路由
+          component:WelcomeView
+        },
       ]  
   },
   
