@@ -23,14 +23,16 @@
                     <el-menu-item index="/winepoem">酒诗列表(朝代)</el-menu-item>
                     <el-menu-item index="/winelocation">酒诗列表(地域)</el-menu-item>
                 </el-sub-menu>
-                <el-menu-item index="/winevessel">
-                    <el-icon>
-                        <GobletSquareFull />
-                    </el-icon>
+                <el-sub-menu index="/wineqi">
                     <template #title>
+                        <el-icon>
+                            <GobletSquareFull />
+                        </el-icon>
                         <span>酒器管理</span>
                     </template>
-                </el-menu-item>
+                    <el-menu-item index="/winevesseltotal">酒类容器汇总</el-menu-item>
+                    <el-menu-item index="/winevessel">酒器列表</el-menu-item>
+                </el-sub-menu>
                 <el-menu-item index="/winepicture">
                     <el-icon>
                         <Picture />

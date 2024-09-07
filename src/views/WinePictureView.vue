@@ -21,6 +21,7 @@
                     <span style="font-size: 20px; letter-spacing: 3px;">{{ scope.row.imagename }}</span>
                 </template>
             </el-table-column>
+            <el-table-column prop="dynasty" label="朝代" width="100" />
             <el-table-column prop="image" label="酒画图片">
                 <template v-slot="scope">
                     <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
@@ -54,12 +55,12 @@
         <div>
             <el-dialog v-model="dialogVisible" title="酒画信息" style="width:50%;height:80%" h:before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <!-- <el-form-item label="酒画ID:" prop="id">
-                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="true"
-                            placeholder="自动生成,不可修改" />
-                    </el-form-item> -->
+
                     <el-form-item label="酒画名:" prop="imagename">
                         <el-input v-model="form.imagename" style="width: 80%;" clearable />
+                    </el-form-item>
+                    <el-form-item label="朝代:" prop="dynasty">
+                        <el-input v-model="form.dynasty" style="width: 80%;" clearable />
                     </el-form-item>
                     <el-form-item label="酒画:" prop="image">
                         <el-upload class="avatar-uploader" action="http://localhost:9000/poemimages/api/upload"
@@ -123,6 +124,7 @@ export default {
             form: {
                 id: 0,
                 imagename: '',
+                dynasty:''
 
             },
             rules: {
@@ -138,6 +140,7 @@ export default {
                         }, trigger: 'blur'
                     }
                 ],
+                dynasty: [{ required: true, message: "请输入酒画朝代!", trigger: "blur" }]
                  
             }
         }

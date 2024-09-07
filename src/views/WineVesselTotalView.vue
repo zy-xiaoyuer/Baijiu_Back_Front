@@ -4,20 +4,19 @@
         <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
-                </el-icon>新增酒器信息</el-button>
+                </el-icon>新增酒器汇总信息</el-button>
         </div>
 
         <div style="margin:10px 0px;">
-            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒器的朝代或现藏地" style="width:25%;" :prefix-icon="Search" />
+            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒器" style="width:25%;" :prefix-icon="Search" />
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
-
 
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒器ID" width="70" />
-            <el-table-column prop="age" label="朝代" />
-            <el-table-column prop="now" label="现藏" />
+            <el-table-column prop="name" label="酒器名" width="180" />
+            <el-table-column prop="discription" label="描述" />
             <el-table-column prop="picture" label="酒器图片">
                 <template v-slot="scope">
                     <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
@@ -49,24 +48,19 @@
         </div>
 
         <div>
-            <el-dialog v-model="dialogVisible" title="酒器信息" style="height:90%;width:50%;" :before-close="handleClose">
-               
-                <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label="朝代:" prop="age">
-                        <el-input v-model="form.age" style="width: 80%;" clearable :disabled="!isEditMode" />
+            <el-dialog v-model="dialogVisible" title="酒器汇总信息" style="height:90%;width:50%;" :before-close="handleClose">
+
+                <el-form :model="form" label-width="120px" :rules="rules" ref="form" enctype="multipart/form-data">
+                    <el-form-item label="酒器名:" prop="name">
+                        <el-input v-model="form.name" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
-                    <el-form-item label="现藏:" prop="now">
-                        <el-input  v-model="form.now" style="width: 80%;" clearable
+                    <el-form-item label="描述:" prop="discription">
+                        <el-input type="textarea" v-model="form.discription" style="width: 80%;" clearable
                             :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
-                        <el-upload :action="uploadURL" :on-preview="handlePreview" :on-remove="handleRemove"
-                            list-type="picture" :headers="headerObj" :on-success="handleSuccess">
-                            <el-button size="small" type="primary">点击上传</el-button>
-                        </el-upload>
-                        <el-dialog title="图片预览" v-model="previewVisible" width="50%">
-                            <img :src="previewPath" alt="" class="previewImg">
-                        </el-dialog>
+                        <input type="file" @change="handleFileChange" />
+                        <el-button type="primary" @click="uploadFile">上传图片</el-button>
                     </el-form-item>
 
                 </el-form>
@@ -85,66 +79,92 @@
 
 import request from '@/api/request';
 export default {
-    name: "VesselView",
+   
+    name: "VesselTotal",
     data() {
         return {
             tableData: [],
             pageNum: 1,
             pageSize: 8,
             total: 0,
-            isEditMode: false,
+            isEditMode: false, 
             search: "",
             dialogVisible: false,
-            uploadUrl: '/upload', // 你的图片上传接口
-            imageFileList: [], // 用于存储已上传的图片列表
+            imageFile: null,
             form: {
                 id: '',
-                age: '',
-                time: '',
-                picture: ''
+                name: '',
+                discription: '',
+                picture:''
             },
             rules: {
-                age: [
-                    { required: true, message: "请输入酒器的朝代!", trigger: "blur" },
-                    
+                name: [
+                    { required: true, message: "请输入酒器名!", trigger: "blur" },
+                    {
+                        validator: (rule, value, callback) => {
+                            this.checkDuplicatename(value, (err) => {
+                                if (err) {
+                                    callback(new Error('酒器已经存在'));
+                                } else {
+                                    callback();
+                                }
+                            });
+                        },
+                        trigger: 'blur'
+                    }
                 ],
-                now: [
-                    { required: true, message: "请输入酒器的现藏地!", trigger: "blur" }
+                discription: [
+                    { required: true, message: "请输入酒器描述内容!", trigger: "blur" }
                 ],
                 picture: [
                     { required: true, message: "请选择酒器图片!", trigger: "blur" }
                 ],
-
+                
             }
         }
     },
     mounted() {
         this.load();
     },
-
+    
     methods: {
-        // 图片上传成功后的回调
-        handleSuccess(response, file, fileList) {
-            if (response.code === 200) {
-                this.form.picture = response.data.url; // 假设返回的是图片的URL
-            } else {
-                this.$message.error('图片上传失败');
-            }
+        handleFileChange(event) {
+            this.imageFile = event.target.files[0];
         },
-        beforeUpload(file) {
-            const isImage = file.type.match('image.*');
-            if (!isImage) {
-                this.$message.error('请上传图片格式的文件');
+        async uploadFile() {
+            if (!this.imageFile) {
+                alert('请选择文件！');
+                return;
             }
-            return isImage;
-        },
-        // 移除图片时的钩子
-        handleRemove(file, fileList) {
-            // 可以在这里实现删除图片的逻辑
+            const formData = new FormData();
+            formData.append('file', this.imageFile); 
+
+            try {
+                const response = await request.post('/vesselTotal/api/add', formData);
+                console.log(response.data); // 处理响应数据  
+                alert('文件上传成功：' + response.data);
+            } catch (error) {
+                console.error('文件上传失败：', error);
+                alert('文件上传失败，请重试！');
+            }
         },
         
+        
+        checkDuplicatename(name, callback) {
+            request.get(`/vesselTotal/api/findByname?name=${name}`)
+                .then(res => {
+                    if (res.code === 200) {
+                        callback(new Error('酒器已经存在'));
+                    } else {
+                        callback();
+                    }
+                })
+                .catch(() => {
+                    callback(new Error('检查酒器名时发生错误'));
+                });
+        },
         getImageUrl(imageId) {
-            return this.$httpURL + `/vessel/api/get-image/${imageId}`;
+            return this.$httpURL+`/vesselTotal/api/get-image/${imageId}`;
         },
         handleClose(done) {
             this.$confirm('确认关闭？')
@@ -164,11 +184,11 @@ export default {
         },
 
         load() {
-            request.post("vessel/api/listPage", {
+            request.post("vesselTotal/api/listPage", {
                 pageSize: this.pageSize,
                 pageNum: this.pageNum,
                 params: {
-                    search: this.search
+                    name: this.search
                 }
             })
                 .then(res => {//res已经是data了
@@ -206,11 +226,11 @@ export default {
             //console.log(row);
             if (row.id) {
                 this.$nextTick(() => {
-                    this.isEditMode = true;
-                    this.form.id = row.id;
-                    this.form.age = row.age;
-                    this.form.now = row.now;
-                    this.picture = row.picture;
+                    this.isEditMode = true; 
+                    this.form.id = row.id; 
+                    this.form.name = row.name; 
+                    this.form.discription = row.discription; 
+                    this.picture=row.picture;
                     this.dialogVisible = true;
                 })
             }
@@ -221,15 +241,15 @@ export default {
                 this.$nextTick(() => {
                     this.isEditMode = false;
                     this.form.id = row.id;
-                    this.form.age = row.age;
-                    this.form.now = row.now;
+                    this.form.name = row.name;
+                    this.form.discription = row.discription; 
                     this.picture = row.picture;
                     this.dialogVisible = true;
                 })
             }
         },
         del(id) {
-            request.get(`vessel/api/delete?id=${id}`).then(res => {
+            request.get(`vesselTotal/api/delete?id=${id}`).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -253,9 +273,10 @@ export default {
             this.imageFileList = [];
         },
         doSave() {
-            
-            request.post("vessel/api/save", this.form).then(res => {
-             //console.log(res);
+            this.checkDuplicatename(this.form.name, (isUnique) => {
+                if (isUnique) {
+                    request.post("vesselTotal/api/save", this.form).then(res => {
+                        //console.log(res);
                         if (res.code === 200) {
                             this.$message({
                                 message: '成功添加酒器信息！',
@@ -271,9 +292,13 @@ export default {
                             });
                         }
                     });
+                } else {
+                    alert('酒器名已存在，请选择其他酒器名。');
+                }
+            });
         },
         doMod() {
-            request.post("vessel/api/mod", this.form).then(res => {
+            request.post("vesselTotal/api/mod", this.form).then(res => {
                 console.log(res);
                 if (res.code === 200) {
                     this.$message({
@@ -294,7 +319,7 @@ export default {
         },
         save() {
             this.$refs["form"].validate((valid) => {
-
+                
                 if (valid) {
                     if (this.isEditMode) {
                         this.doMod()

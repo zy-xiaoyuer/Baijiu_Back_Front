@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
  import LoginView from '@/views/LoginView.vue'
 import UserList from '@/views/UserHomeView.vue'
 import Poemview from '@/views/DynastyWinePoemView.vue'
+import VesselTotalView from '@/views/WineVesselTotalView.vue'
 import VesselView from '@/views/WineVesselView.vue'
 import PictureView from '@/views/WinePictureView.vue'
 import LocationWinePoemView from '@/views/LocationWinePoemView.vue'
@@ -28,8 +29,12 @@ const routes: Array<RouteRecordRaw> = [
           component: Poemview
         },
         {  
+          path: '/winevesseltotal',  
+          component:  VesselTotalView
+        },
+         {  
           path: '/winevessel',  
-          component: VesselView 
+          component:  VesselView
         },
         {  
           path: '/winepicture',  
