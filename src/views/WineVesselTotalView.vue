@@ -1,3 +1,8 @@
+Vue.js 表格组件：酒器信息汇总与搜...
+
+Hi，我是 Kimi～
+很高兴遇见你！你可以随时把网址🔗或者文件📃发给我，我来帮你看看
+
 <template>
     <div>
 
@@ -48,9 +53,11 @@
         </div>
 
         <div>
-            <el-dialog v-model="dialogVisible" title="酒器汇总信息" style="height:90%;width:50%;" :before-close="handleClose">
+            <el-dialog v-model="dialogVisible" title="酒器汇总信息" style="height:100%;width:50%;"
+                :before-close="handleClose">
 
-                <el-form :model="form" label-width="120px" :rules="rules" ref="form" enctype="multipart/form-data">
+                <el-form id="vesselForm" :model="form" label-width="120px" :rules="rules" ref="form"
+                    enctype="multipart/form-data">
                     <el-form-item label="酒器名:" prop="name">
                         <el-input v-model="form.name" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
@@ -59,8 +66,13 @@
                             :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
-                        <input type="file" @change="handleFileChange" />
-                        <el-button type="primary" @click="uploadFile">上传图片</el-button>
+                        <el-upload class="avatar-uploader" action="http://localhost:9000/common/upload"
+                            :show-file-list="false" :on-success="handleAvatarSuccess"
+                            :before-upload="beforeAvatarUpload">
+                            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                        </el-upload>
+
                     </el-form-item>
 
                 </el-form>
@@ -78,8 +90,9 @@
 <script>
 
 import request from '@/api/request';
+
 export default {
-   
+
     name: "VesselTotal",
     data() {
         return {
@@ -87,15 +100,17 @@ export default {
             pageNum: 1,
             pageSize: 8,
             total: 0,
-            isEditMode: false, 
+            isEditMode: false,
             search: "",
             dialogVisible: false,
             imageFile: null,
+            fileList: [],
+            uploadUrl: 'http://localhost:9000/common/upload',
+            imageUrl: '',
             form: {
-                id: '',
                 name: '',
                 discription: '',
-                picture:''
+                picture:null
             },
             rules: {
                 name: [
@@ -119,37 +134,59 @@ export default {
                 picture: [
                     { required: true, message: "请选择酒器图片!", trigger: "blur" }
                 ],
-                
+
             }
         }
     },
     mounted() {
         this.load();
     },
-    
-    methods: {
-        handleFileChange(event) {
-            this.imageFile = event.target.files[0];
-        },
-        async uploadFile() {
-            if (!this.imageFile) {
-                alert('请选择文件！');
-                return;
-            }
-            const formData = new FormData();
-            formData.append('file', this.imageFile); 
 
-            try {
-                const response = await request.post('/vesselTotal/api/add', formData);
-                console.log(response.data); // 处理响应数据  
-                alert('文件上传成功：' + response.data);
-            } catch (error) {
-                console.error('文件上传失败：', error);
-                alert('文件上传失败，请重试！');
-            }
+    methods: {
+        handleAvatarSuccess(res, file) {
+            this.imageUrl = `http://localhost:9000/common/download/${res}`
         },
-        
-        
+        beforeAvatarUpload(file) {
+            const isJPG = file.type === 'image/jpeg';
+            const isLt2M = file.size / 1024 / 1024 < 2;
+            if (!isJPG) {
+                this.$message.error('上传头像图片只能是 JPG 格式!');
+            }
+            if (!isLt2M) {
+                this.$message.error('上传头像图片大小不能超过 2MB!');
+            }
+            return isJPG && isLt2M;
+        },
+       
+        submitForm() {
+            this.$refs.form.validate((valid) => {
+                if (valid) {
+                    const formData = new FormData();
+                    formData.append('name', this.form.name);
+                    formData.append('discription', this.form.discription);
+                    if (this.form.picture) {
+                        formData.append('picture', this.form.picture);
+                    }
+                    request.post('/common/upload', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }).then(response => {
+                        this.$message.success('上传成功');
+                        this.dialogVisible = false;
+                        this.load(); // 重新加载数据
+                    }).catch(error => {
+                        this.$message.error('上传失败');
+                    });
+                } else {
+                    console.log('表单验证失败');
+                    return false;
+                }
+            });
+        },
+
+
+
         checkDuplicatename(name, callback) {
             request.get(`/vesselTotal/api/findByname?name=${name}`)
                 .then(res => {
@@ -164,7 +201,7 @@ export default {
                 });
         },
         getImageUrl(imageId) {
-            return this.$httpURL+`/vesselTotal/api/get-image/${imageId}`;
+            return `http://localhost:9000/common/download/${imageId}`;
         },
         handleClose(done) {
             this.$confirm('确认关闭？')
@@ -226,11 +263,11 @@ export default {
             //console.log(row);
             if (row.id) {
                 this.$nextTick(() => {
-                    this.isEditMode = true; 
-                    this.form.id = row.id; 
-                    this.form.name = row.name; 
-                    this.form.discription = row.discription; 
-                    this.picture=row.picture;
+                    this.isEditMode = true;
+                    this.form.id = row.id;
+                    this.form.name = row.name;
+                    this.form.discription = row.discription;
+                    this.picture = row.picture;
                     this.dialogVisible = true;
                 })
             }
@@ -242,7 +279,7 @@ export default {
                     this.isEditMode = false;
                     this.form.id = row.id;
                     this.form.name = row.name;
-                    this.form.discription = row.discription; 
+                    this.form.discription = row.discription;
                     this.picture = row.picture;
                     this.dialogVisible = true;
                 })
@@ -319,7 +356,7 @@ export default {
         },
         save() {
             this.$refs["form"].validate((valid) => {
-                
+
                 if (valid) {
                     if (this.isEditMode) {
                         this.doMod()
@@ -337,4 +374,31 @@ export default {
 }
 </script>
 
-<style></style>
+<style>
+  .avatar-uploader .el-upload {
+      border: 1px dashed #d9d9d9;
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+  }
+
+  .avatar-uploader .el-upload:hover {
+      border-color: #409EFF;
+  }
+
+  .avatar-uploader-icon {
+      font-size: 28px;
+      color: #8c939d;
+      width: 178px;
+      height: 178px;
+      line-height: 178px;
+      text-align: center;
+  }
+
+  .avatar {
+      width: 178px;
+      height: 178px;
+      display: block;
+  }
+</style>
