@@ -17,14 +17,15 @@ Hi，我是 Kimi～
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
-        <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
+        <el-table :data="tableData" @row-click="handlerowclick" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒器ID" width="70" />
             <el-table-column prop="name" label="酒器名" width="180" />
             <el-table-column prop="discription" label="描述" />
             <el-table-column prop="picture" label="酒器图片">
                 <template v-slot="scope">
-                    <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
+                    <!-- <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;"> -->
+                    <img :src="imageSrc" alt="Image" style="width: 100%; height: auto;">
                 </template>
             </el-table-column>
             <el-table-column fixed="right" label="操 作" width="260">
@@ -66,12 +67,13 @@ Hi，我是 Kimi～
                             :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
-                        <el-upload class="avatar-uploader" action="http://localhost:9000/common/upload"
-                            :show-file-list="false" :on-success="handleAvatarSuccess"
-                            :before-upload="beforeAvatarUpload">
-                            <img v-if="imageUrl" :src="imageUrl" class="avatar">
-                            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                        <el-upload class="upload-demo upload-tip" drag ref="upload" :action="uploadUrl"
+                            :auto-upload="false" :on-change="onUploadChange" multiple>
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                            <div class="el-upload__tip">只能上传jpg/png文件,且不超过500kb</div>
                         </el-upload>
+
 
                     </el-form-item>
 
@@ -97,6 +99,7 @@ export default {
     data() {
         return {
             tableData: [],
+            clickid:'',
             pageNum: 1,
             pageSize: 8,
             total: 0,
@@ -105,12 +108,12 @@ export default {
             dialogVisible: false,
             imageFile: null,
             fileList: [],
-            uploadUrl: 'http://localhost:9000/common/upload',
-            imageUrl: '',
+            uploadUrl: 'http://localhost:9000/common/save',
+            imageSrc: '',
             form: {
                 name: '',
                 discription: '',
-                picture:null
+                picture:''
             },
             rules: {
                 name: [
@@ -140,9 +143,45 @@ export default {
     },
     mounted() {
         this.load();
+        this.getImageById(this.tableData.id);
+          
     },
-
+    
     methods: {
+        handlerowclick(row)
+        {
+
+            return null;
+        },
+        onUploadChange(file) {
+            const formData = new FormData();
+            //formData.append("picture", this.$("#form.id")[0].files[0]);
+            const File = file.raw;
+            
+            formData.append("picture", file);
+           
+            request.post(this.uploadUrl, formData, {
+                
+            })
+                .then(response => {
+                    // 处理响应
+
+                    console.log(file.raw);
+                    console.log(response);
+                    // if (response.code === 200) {
+                    //     this.form.picture = file.raw; 
+                    //     this.$message.success('上传成功');
+                    // } else {
+                    //     this.$message.error('上传失败');
+                    // }
+                })
+
+                .catch(error => {
+                    // 处理错误
+                    console.error(error);
+                });
+
+        },
         handleAvatarSuccess(res, file) {
             this.imageUrl = `http://localhost:9000/common/download/${res}`
         },
@@ -158,35 +197,7 @@ export default {
             return isJPG && isLt2M;
         },
        
-        submitForm() {
-            this.$refs.form.validate((valid) => {
-                if (valid) {
-                    const formData = new FormData();
-                    formData.append('name', this.form.name);
-                    formData.append('discription', this.form.discription);
-                    if (this.form.picture) {
-                        formData.append('picture', this.form.picture);
-                    }
-                    request.post('/common/upload', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    }).then(response => {
-                        this.$message.success('上传成功');
-                        this.dialogVisible = false;
-                        this.load(); // 重新加载数据
-                    }).catch(error => {
-                        this.$message.error('上传失败');
-                    });
-                } else {
-                    console.log('表单验证失败');
-                    return false;
-                }
-            });
-        },
-
-
-
+       
         checkDuplicatename(name, callback) {
             request.get(`/vesselTotal/api/findByname?name=${name}`)
                 .then(res => {
@@ -198,6 +209,19 @@ export default {
                 })
                 .catch(() => {
                     callback(new Error('检查酒器名时发生错误'));
+                });
+        },
+        getImageById(id) {
+            console.log(id);
+            request.get(`http://localhost:9000/common/download/${id}`)
+                .then(response => {
+                    console.log(response);
+                    const baseimg = response.data;
+                    this.imageSrc= `data:image/jpeg;base64,${baseimg}`;  
+                })
+                .catch(error => {
+                    console.error('获取图片出错:', error);
+                    //this.imageSrc = null;
                 });
         },
         getImageUrl(imageId) {
@@ -356,7 +380,6 @@ export default {
         },
         save() {
             this.$refs["form"].validate((valid) => {
-
                 if (valid) {
                     if (this.isEditMode) {
                         this.doMod()
