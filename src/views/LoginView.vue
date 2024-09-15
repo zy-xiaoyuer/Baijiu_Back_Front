@@ -1,6 +1,7 @@
 <template>
     <div class="container">
-        <el-form ref="ruleFormRef" :model="loginUser" :rules="rules" label-width="100px" class="login-form">
+        <el-form ref="ruleFormRef" :model="loginUser" :rules="rules" label-width="100px" class="login-form"
+            method="post">
             <div class="form-header">Login</div>
             <el-form-item label="姓名" prop="username">
                 <el-input v-model="loginUser.username" placeholder="请输入用户名"></el-input>

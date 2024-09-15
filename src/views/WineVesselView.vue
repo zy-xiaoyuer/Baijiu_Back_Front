@@ -8,14 +8,14 @@
         </div>
 
         <div style="margin:10px 0px;">
-            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒器的朝代或现藏地" style="width:25%;" :prefix-icon="Search" />
+            <el-input v-model="search" clearable placeholder="请输入您要搜索的酒器的朝代或现藏地" style="width:25%;"
+                :prefix-icon="Search" />
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
-
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <el-table-column prop="id" label="酒器ID" width="70" />
+            <!-- <el-table-column prop="id" label="酒器ID" width="70" /> -->
             <el-table-column prop="age" label="朝代" />
             <el-table-column prop="now" label="现藏" />
             <el-table-column prop="picture" label="酒器图片">
@@ -50,14 +50,16 @@
 
         <div>
             <el-dialog v-model="dialogVisible" title="酒器信息" style="height:90%;width:50%;" :before-close="handleClose">
-               
+
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
+                    <el-form-item label="id:" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
                     <el-form-item label="朝代:" prop="age">
                         <el-input v-model="form.age" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="现藏:" prop="now">
-                        <el-input  v-model="form.now" style="width: 80%;" clearable
-                            :disabled="!isEditMode" />
+                        <el-input v-model="form.now" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
                         <el-upload :action="uploadURL" :on-preview="handlePreview" :on-remove="handleRemove"

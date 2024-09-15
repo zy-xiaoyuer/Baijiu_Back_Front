@@ -10,18 +10,18 @@ module.exports = defineConfig({
   devServer: {
     open: true,
     host: 'localhost',
-    port: 8080,
+    port: 9000,
+    proxy: "http://127.0.0.1:8081", //代理服务器
     https: false,
     // 设置跨域
-    proxy: {
-      '/api': {
-        target: 'http://localhost:9000',
-        ws: true,
-        changeOrigin: true,
-        pathRewrite: {
-          '^api': ''
-        }
-      }
-    }
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:9000',
+    //     ws: true,
+    //     changeOrigin: true,
+    //     pathRewrite: {
+    //     }
+    //   }
+    // }
   }
 })

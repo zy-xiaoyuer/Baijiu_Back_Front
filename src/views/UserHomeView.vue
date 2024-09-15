@@ -14,7 +14,7 @@
 
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555'}"
             border>
-            <el-table-column prop="id" label="用户ID" width="40" />
+            <!-- <el-table-column prop="id" label="用户ID" width="40" /> -->
             <el-table-column prop="username" label="用户名" />
             <el-table-column prop="nickname" label="昵称" />
             <el-table-column prop="sex" label="性别" width="60">
@@ -54,6 +54,9 @@
         <div>
             <el-dialog v-model="dialogVisible" title="用户信息" width="30%" :before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
+                    <el-form-item label=":" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
                     <el-form-item label="用户名:" prop="username">
                         <el-input v-model="form.username" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>

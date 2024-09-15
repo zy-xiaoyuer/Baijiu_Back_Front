@@ -1,11 +1,5 @@
-Vue.js 表格组件：酒器信息汇总与搜...
-
-Hi，我是 Kimi～
-很高兴遇见你！你可以随时把网址🔗或者文件📃发给我，我来帮你看看
-
 <template>
     <div>
-
         <div style="margin:10px px;margin-top:0px">
             <el-button type="primary" @click="add"><el-icon>
                     <DocumentAdd />
@@ -17,15 +11,14 @@ Hi，我是 Kimi～
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
-        <el-table :data="tableData" @row-click="handlerowclick" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
+        <el-table :data="tableData"  style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒器ID" width="70" />
             <el-table-column prop="name" label="酒器名" width="180" />
             <el-table-column prop="discription" label="描述" />
             <el-table-column prop="picture" label="酒器图片">
                 <template v-slot="scope">
-                    <!-- <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;"> -->
-                    <img :src="imageSrc" alt="Image" style="width: 100%; height: auto;">
+                    <img :src="`data:image/jpeg;base64,${scope.row.picture}`" alt="Image" style="width: 100%; height: auto;">
                 </template>
             </el-table-column>
             <el-table-column fixed="right" label="操 作" width="260">
@@ -56,7 +49,6 @@ Hi，我是 Kimi～
         <div>
             <el-dialog v-model="dialogVisible" title="酒器汇总信息" style="height:100%;width:50%;"
                 :before-close="handleClose">
-
                 <el-form id="vesselForm" :model="form" label-width="120px" :rules="rules" ref="form"
                     enctype="multipart/form-data">
                     <el-form-item label="酒器名:" prop="name">
@@ -73,8 +65,6 @@ Hi，我是 Kimi～
                             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                             <div class="el-upload__tip">只能上传jpg/png文件,且不超过500kb</div>
                         </el-upload>
-
-
                     </el-form-item>
 
                 </el-form>
@@ -99,7 +89,6 @@ export default {
     data() {
         return {
             tableData: [],
-            clickid:'',
             pageNum: 1,
             pageSize: 8,
             total: 0,
@@ -143,44 +132,28 @@ export default {
     },
     mounted() {
         this.load();
-        this.getImageById(this.tableData.id);
-          
     },
     
     methods: {
-        handlerowclick(row)
-        {
-
-            return null;
-        },
         onUploadChange(file) {
             const formData = new FormData();
-            //formData.append("picture", this.$("#form.id")[0].files[0]);
-            const File = file.raw;
-            
-            formData.append("picture", file);
-           
-            request.post(this.uploadUrl, formData, {
-                
-            })
+            const File=file.raw
+            formData.append("picture",File);
+            console.log(file.raw)
+            request.post(this.uploadUrl, formData)
                 .then(response => {
-                    // 处理响应
-
-                    console.log(file.raw);
-                    console.log(response);
-                    // if (response.code === 200) {
-                    //     this.form.picture = file.raw; 
-                    //     this.$message.success('上传成功');
-                    // } else {
-                    //     this.$message.error('上传失败');
-                    // }
+                    console.log(response)
+                    if (response.code === 200) {
+                        this.form.picture = `data:image/jpeg;base64,${response.data}`;
+                        this.$message.success('上传成功');
+                    } else {
+                        this.$message.error('上传失败');
+                    }
                 })
-
                 .catch(error => {
-                    // 处理错误
                     console.error(error);
+                    this.$message.error('上传出错');
                 });
-
         },
         handleAvatarSuccess(res, file) {
             this.imageUrl = `http://localhost:9000/common/download/${res}`
@@ -216,17 +189,15 @@ export default {
             request.get(`http://localhost:9000/common/download/${id}`)
                 .then(response => {
                     console.log(response);
-                    const baseimg = response.data;
-                    this.imageSrc= `data:image/jpeg;base64,${baseimg}`;  
+                    const baseimg = response.data.baseimg;
+                    return `data:image/jpeg;base64,${baseimg}`;  
                 })
                 .catch(error => {
                     console.error('获取图片出错:', error);
-                    //this.imageSrc = null;
+                    this.imageSrc = null;
                 });
         },
-        getImageUrl(imageId) {
-            return `http://localhost:9000/common/download/${imageId}`;
-        },
+        
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {

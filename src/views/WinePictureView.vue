@@ -15,7 +15,7 @@
         <!-- 表格数据渲染用户列表信息 -->
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <el-table-column prop="id" label="酒画ID" width="100" />
+            <!-- <el-table-column prop="id" label="id" width="100" /> -->
             <el-table-column prop="imagename" label="酒画名">
                 <template v-slot="scope">
                     <span style="font-size: 20px; letter-spacing: 3px;">{{ scope.row.imagename }}</span>
@@ -55,7 +55,9 @@
         <div>
             <el-dialog v-model="dialogVisible" title="酒画信息" style="width:50%;height:80%" h:before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-
+                    <el-form-item label="id:" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    </el-form-item>
                     <el-form-item label="酒画名:" prop="imagename">
                         <el-input v-model="form.imagename" style="width: 80%;" clearable />
                     </el-form-item>
