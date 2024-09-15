@@ -7,7 +7,7 @@ const request = axios.create({
 
 // request 拦截器
 // 可以自请求发送前对请求做一些处理
-// 比如统一加token，对请求参数统一加密
+
 request.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'application/json;charset=utf-8';
 
@@ -23,7 +23,7 @@ request.interceptors.response.use(
     response => {
         let res = response.data;
         // 如果是返回的文件
-        if (response.config.responseType === 'blob') {
+        if (response.config.responseType === 'longblob') {
             return res
         }
         //兼容服务端返回的字符串数据

@@ -14,7 +14,7 @@ module.exports = defineConfig({
     https: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:9000',
+        target: 'http://192.168.90.120:9000',
         ws: true,
         changeOrigin: true,
         pathRewrite: {
