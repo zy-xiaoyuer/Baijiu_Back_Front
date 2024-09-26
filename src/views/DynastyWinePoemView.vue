@@ -197,9 +197,14 @@ export default {
             })
                 .then(res => {//res已经是data了
                     console.log(res)
+                    console.log(res.data)
+                    //console.log(res.data.dynasty)
                     if (res.code === 200) {
                         this.tableData = res.data;
                         this.total = res.total;
+                        res.data.forEach(poem => {
+                            console.log(poem.dynasty);
+                        });  
                     } else {
                         alert('数据获取失败：' + res.msg);
                     }

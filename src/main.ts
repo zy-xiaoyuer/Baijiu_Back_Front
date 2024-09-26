@@ -11,6 +11,7 @@ import axios from 'axios';
 const app = createApp(App)
 app.use(store).use(router).use(ElementPlus,{locale:zhCn}).mount('#app')
 app.config.globalProperties.$httpURL = "http://localhost:9000";
+app.config.globalProperties.$getimageURL = "http://localhost:9000/upload";
 app.config.globalProperties.$axios = axios//全局引入
 
 

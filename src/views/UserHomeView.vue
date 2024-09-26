@@ -98,7 +98,7 @@ import request from '@/api/request';
 
 export default {
     name: "UserHome",
-    
+
     mounted() {
         this.load();
     },
@@ -123,7 +123,7 @@ export default {
                         this.dialogVisible = false;
                         this.$nextTick(() => {
                             this.resetForm();
-                        this.isEditMode=false
+                            this.isEditMode = false
                         })
                     })
                     done();
@@ -180,14 +180,14 @@ export default {
                     this.form.password = row.password;
                     this.form.nickname = row.nickname;
                     this.form.sex = row.sex + '';
-                    this.form.age=row.age,
-                    this.form.phone=row.phone,
-                    this.form.email = row.email;
+                    this.form.age = row.age,
+                        this.form.phone = row.phone,
+                        this.form.email = row.email;
                     this.dialogVisible = true;
                 })
             }
         },
-       
+
 
         look(row) {
             if (row.id) {
@@ -199,10 +199,10 @@ export default {
                     this.form.nickname = row.nickname;
                     this.form.sex = row.sex + '';
                     this.form.age = row.age,
-                    this.form.phone = row.phone,
-                    this.form.email = row.email;
+                        this.form.phone = row.phone,
+                        this.form.email = row.email;
                     this.dialogVisible = true;
-                    
+
                 })
             }
         },
@@ -367,6 +367,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

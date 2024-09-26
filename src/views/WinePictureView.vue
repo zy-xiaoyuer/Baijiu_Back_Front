@@ -65,22 +65,50 @@
                         <el-input v-model="form.dynasty" style="width: 80%;" clearable />
                     </el-form-item>
                     <el-form-item label="酒画:" prop="image">
-                        <el-upload class="avatar-uploader" action="http://localhost:9000/poemimages/api/upload"
-                            :show-file-list="false" :on-success="handleSuccess" :before-upload="beforeUpload">
+                        <!-- action="http://localhost:9000/poemimages/api/upload" -->
+                        <!-- :on-success="handleSuccess" -->
+                        <el-upload class="avatar-uploader" :show-file-list="false" :before-upload="beforeUpload">
                             <img v-if="imageUrl" :src="imageUrl" class="avatar" />
                             <el-icon v-else class="avatar-uploader-icon">
                                 <Plus />
                             </el-icon>
                         </el-upload>
-                    </el-form-item>
+                        <el-upload action="#" list-type="picture-card" :auto-upload="false">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+
+                            <template #file="{ file }">
+                                <div>
+                                    <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
+                                    <span class="el-upload-list__item-actions">
+                                        <span class="el-upload-list__item-preview"
+                                            @click="handlePictureCardPreview(file)">
+                                            <el-icon><zoom-in /></el-icon>
+                                        </span>
+                                        <span v-if="!disabled" class="el-upload-list__item-delete"
+                                            @click="handleDownload(file)">
+                                            <el-icon>
+                                                <Download />
+                                            </el-icon>
+                                        </span>
+                                        <span v-if="!disabled" class="el-upload-list__item-delete"
+                                            @click="handleRemove(file)">
+                                            <el-icon>
+                                                <Delete />
+                                            </el-icon>
+                                        </span>
+                                    </span>
+                                </div>
+                            </template>
+                        </el-upload>
+
+                        <el-dialog v-model="dialogVisible">
+                            <img w-full :src="dialogImageUrl" alt="Preview Image" />
+                        </el-dialog>
+                </el-form-item>
                 </el-form>
-                <template #footer>
-                    <span class="dialog-footer">
-                        <el-button @click="dialogVisible = false">取消</el-button>
-                        <el-button type="primary" @click="save">确认</el-button>
-                    </span>
-                </template>
-            </el-dialog>
+                </el-dialog>
         </div>
     </div>
 </template>
@@ -188,18 +216,13 @@ export default {
             }
             return isJPG && isLt2M;
         },
-        handleSuccess(response, file, fileList) {
+        handleSuccess(response, file) {
+            this.imageUrl = URL.createObjectURL(file.raw);
             this.$message({
                 message: '图片上传成功！',
                 type: 'success'
             });
-            // 假设后端返回的response对象中包含文件的URL
-            console.log(response)
-            this.form.image = response.data.url;
-            this.fileList = []; // 清空文件列表并重新添加文件对象
-            this.fileList.push({ raw: file.raw, url: response.url });
-            // 更新预览的图片URL
-            this.imageUrl = response.url;
+            
         },
        
         handleClose(done) {
@@ -366,5 +389,31 @@ export default {
     width: 178px;
     height: 178px;
     text-align: center;
+}
+.avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+}
+
+.avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+}
+
+.avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
 }
 </style>

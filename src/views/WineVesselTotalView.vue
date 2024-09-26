@@ -11,14 +11,15 @@
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
         </div>
 
-        <el-table :data="tableData"  style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
+        <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
             <el-table-column prop="id" label="酒器ID" width="70" />
             <el-table-column prop="name" label="酒器名" width="180" />
             <el-table-column prop="discription" label="描述" />
             <el-table-column prop="picture" label="酒器图片">
                 <template v-slot="scope">
-                    <img :src="`data:image/jpeg;base64,${scope.row.picture}`" alt="Image" style="width: 100%; height: auto;">
+                    <img v-if="scope.row.picture" :src="this.$getimageURL +'/'+ scope.row.picture.split('//').pop()"
+                        alt="Image" style="width: 100%; height: auto;" />
                 </template>
             </el-table-column>
             <el-table-column fixed="right" label="操 作" width="260">
@@ -59,14 +60,39 @@
                             :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
-                        <el-upload class="upload-demo upload-tip" drag ref="upload" :action="uploadUrl"
-                            :auto-upload="false" :on-change="onUploadChange" multiple>
-                            <i class="el-icon-upload"></i>
-                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                            <div class="el-upload__tip">只能上传jpg/png文件,且不超过500kb</div>
+                        <el-upload action="" list-type="picture-card" :auto-upload="false" :before-upload="beforeUpload"
+                            v-model="form.picture" @change="handleUpload">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                            <template #file="{ file }">
+                                <div>
+                                    <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
+                                    <span class="el-upload-list__item-actions">
+                                        <span class="el-upload-list__item-preview"
+                                            @click="handlePictureCardPreview(file)">
+                                            <el-icon><zoom-in /></el-icon>
+                                        </span>
+                                        <span v-if="!disabled" class="el-upload-list__item-delete"
+                                            @click="handleDownload(file)">
+                                            <el-icon>
+                                                <Download />
+                                            </el-icon>
+                                        </span>
+                                        <span v-if="!disabled" class="el-upload-list__item-delete"
+                                            @click="handleRemove(file)">
+                                            <el-icon>
+                                                <Delete />
+                                            </el-icon>
+                                        </span>
+                                    </span>
+                                </div>
+                            </template>
                         </el-upload>
+                        <!-- <el-dialog v-model="dialogVisible">
+                            <img w-full :src="dialogImageUrl" alt="Preview Image" />
+                        </el-dialog> -->
                     </el-form-item>
-
                 </el-form>
                 <template #footer>
                     <span class="dialog-footer" v-if="isEditMode">
@@ -82,10 +108,16 @@
 <script>
 
 import request from '@/api/request';
-
+import { Delete, Download, Plus, ZoomIn } from '@element-plus/icons-vue'
 export default {
 
     name: "VesselTotal",
+    components: {
+        Delete,
+        Download,
+        Plus,
+        ZoomIn
+    },
     data() {
         return {
             tableData: [],
@@ -94,15 +126,17 @@ export default {
             total: 0,
             isEditMode: false,
             search: "",
+            dialogImageUrl:'',
+            disabled:false,
             dialogVisible: false,
             imageFile: null,
             fileList: [],
-            uploadUrl: 'http://localhost:9000/common/save',
-            imageSrc: '',
+            uploadUrl: 'http://localhost:9000/vesselTotal/api/save',
+            imageSrc: null,
             form: {
                 name: '',
                 discription: '',
-                picture:''
+                picture: ''
             },
             rules: {
                 name: [
@@ -124,7 +158,7 @@ export default {
                     { required: true, message: "请输入酒器描述内容!", trigger: "blur" }
                 ],
                 picture: [
-                    { required: true, message: "请选择酒器图片!", trigger: "blur" }
+                    { required: true, message: "请选择酒器图片!", trigger: "change" }
                 ],
 
             }
@@ -132,45 +166,33 @@ export default {
     },
     mounted() {
         this.load();
+        // this.tableData.forEach(row => {
+        //     this.getImageById(row.id, row);  // 根据 id 获取并设置图片路径
+        // });
     },
-    
+
     methods: {
-        onUploadChange(file) {
-            const formData = new FormData();
-            const File=file.raw
-            formData.append("picture",File);
-            console.log(file.raw)
-            request.post(this.uploadUrl, formData)
-                .then(response => {
-                    console.log(response)
-                    if (response.code === 200) {
-                        this.form.picture = `data:image/jpeg;base64,${response.data}`;
-                        this.$message.success('上传成功');
-                    } else {
-                        this.$message.error('上传失败');
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                    this.$message.error('上传出错');
-                });
+        handleUpload(file) {
+            this.imageFile = file.raw; // 将文件直接赋值给 imageFile
+            this.form.picture = file.raw; // 如果你想保留 url
         },
-        handleAvatarSuccess(res, file) {
-            this.imageUrl = `http://localhost:9000/common/download/${res}`
-        },
-        beforeAvatarUpload(file) {
-            const isJPG = file.type === 'image/jpeg';
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isJPG) {
-                this.$message.error('上传头像图片只能是 JPG 格式!');
-            }
-            if (!isLt2M) {
-                this.$message.error('上传头像图片大小不能超过 2MB!');
-            }
-            return isJPG && isLt2M;
-        },
+        beforeUpload(file) {
+            console.log('beforeUpload called with file:', file);
+            this.imageFile = file.raw;
+            return false; // 阻止自动上传
+        },  
        
-       
+        handleRemove(file) {
+            console.log(file);
+        },
+        handlePictureCardPreview(file) {
+            this.dialogImageUrl = file.url;
+            this.dialogVisible = true;
+        },
+        handleDownload(file) {
+            console.log(file);
+        },
+        
         checkDuplicatename(name, callback) {
             request.get(`/vesselTotal/api/findByname?name=${name}`)
                 .then(res => {
@@ -182,19 +204,6 @@ export default {
                 })
                 .catch(() => {
                     callback(new Error('检查酒器名时发生错误'));
-                });
-        },
-        getImageById(id) {
-            console.log(id);
-            request.get(`http://localhost:9000/common/download/${id}`)
-                .then(response => {
-                    console.log(response);
-                    const baseimg = response.data.baseimg;
-                    return `data:image/jpeg;base64,${baseimg}`;  
-                })
-                .catch(error => {
-                    console.error('获取图片出错:', error);
-                    this.imageSrc = null;
                 });
         },
         
@@ -301,13 +310,25 @@ export default {
         },
         resetForm() {
             this.$refs.form.resetFields();
-            this.form.picture = '';
-            this.imageFileList = [];
+            //this.form.picture = '';
+           // this.imageFileList = [];
         },
         doSave() {
             this.checkDuplicatename(this.form.name, (isUnique) => {
-                if (isUnique) {
-                    request.post("vesselTotal/api/save", this.form).then(res => {
+               
+                    console.log(this.form.name)
+                    let formData = new FormData();
+                    formData.append('name', this.form.name); // 添加文本字段
+                    formData.append('discription', this.form.discription); // 添加文本字段
+                    if (this.imageFile) {
+                        formData.append('picture', this.imageFile); // 确保 imageFile 已经被赋值
+                    }
+                    console.log(this.form.picture)
+                    request.post("vesselTotal/api/saveall", formData,{
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }).then(res => {
                         //console.log(res);
                         if (res.code === 200) {
                             this.$message({
@@ -324,9 +345,6 @@ export default {
                             });
                         }
                     });
-                } else {
-                    alert('酒器名已存在，请选择其他酒器名。');
-                }
             });
         },
         doMod() {
@@ -351,12 +369,16 @@ export default {
         },
         save() {
             this.$refs["form"].validate((valid) => {
+                console.log(this.form.name)
+                console.log(this.form.discription)
+                console.log(this.form.picture)
                 if (valid) {
-                    if (this.isEditMode) {
-                        this.doMod()
-                    } else {
-                        this.doSave();
-                    }
+                    // if (this.isEditMode) {
+                    //     this.doMod()
+                    // } else {
+                    //     this.doSave();
+                    // }
+                    this.doSave();
                 } else {
                     console.log('表单验证失败');
                     return false;
@@ -369,30 +391,30 @@ export default {
 </script>
 
 <style>
-  .avatar-uploader .el-upload {
-      border: 1px dashed #d9d9d9;
-      border-radius: 6px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-  }
+.avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
 
-  .avatar-uploader .el-upload:hover {
-      border-color: #409EFF;
-  }
+.avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+}
 
-  .avatar-uploader-icon {
-      font-size: 28px;
-      color: #8c939d;
-      width: 178px;
-      height: 178px;
-      line-height: 178px;
-      text-align: center;
-  }
+.avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+}
 
-  .avatar {
-      width: 178px;
-      height: 178px;
-      display: block;
-  }
+.avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+}
 </style>
