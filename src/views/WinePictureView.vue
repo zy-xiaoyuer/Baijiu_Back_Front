@@ -24,7 +24,8 @@
             <el-table-column prop="dynasty" label="朝代" width="100" />
             <el-table-column prop="image" label="酒画图片">
                 <template v-slot="scope">
-                    <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
+                    <img v-if="scope.row.image" :src="this.$getimageURL + '/' + scope.row.image.split('\\').pop()"
+                        alt="Image" style="width: 100%; height: auto;" />
                 </template>
             </el-table-column>
             <el-table-column fixed="right" label="操 作" width="290">
@@ -65,50 +66,11 @@
                         <el-input v-model="form.dynasty" style="width: 80%;" clearable />
                     </el-form-item>
                     <el-form-item label="酒画:" prop="image">
-                        <!-- action="http://localhost:9000/poemimages/api/upload" -->
-                        <!-- :on-success="handleSuccess" -->
-                        <el-upload class="avatar-uploader" :show-file-list="false" :before-upload="beforeUpload">
-                            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-                            <el-icon v-else class="avatar-uploader-icon">
-                                <Plus />
-                            </el-icon>
-                        </el-upload>
-                        <el-upload action="#" list-type="picture-card" :auto-upload="false">
-                            <el-icon>
-                                <Plus />
-                            </el-icon>
-
-                            <template #file="{ file }">
-                                <div>
-                                    <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
-                                    <span class="el-upload-list__item-actions">
-                                        <span class="el-upload-list__item-preview"
-                                            @click="handlePictureCardPreview(file)">
-                                            <el-icon><zoom-in /></el-icon>
-                                        </span>
-                                        <span v-if="!disabled" class="el-upload-list__item-delete"
-                                            @click="handleDownload(file)">
-                                            <el-icon>
-                                                <Download />
-                                            </el-icon>
-                                        </span>
-                                        <span v-if="!disabled" class="el-upload-list__item-delete"
-                                            @click="handleRemove(file)">
-                                            <el-icon>
-                                                <Delete />
-                                            </el-icon>
-                                        </span>
-                                    </span>
-                                </div>
-                            </template>
-                        </el-upload>
-
-                        <el-dialog v-model="dialogVisible">
-                            <img w-full :src="dialogImageUrl" alt="Preview Image" />
-                        </el-dialog>
-                </el-form-item>
+                        <input type="file" @change="handleFileChange" accept="image/*" />
+                        <img v-if="dialogImageUrl" :src="dialogImageUrl" alt="Preview">
+                    </el-form-item>
                 </el-form>
-                </el-dialog>
+            </el-dialog>
         </div>
     </div>
 </template>
@@ -117,12 +79,9 @@
 
 import request from '@/api/request';
 import { ref } from 'vue'
-import { Plus } from '@element-plus/icons-vue';
-
 
 export default {
     name: "WinePicture",
-    components: { Plus },
     data() {
         let checkDuplicate = (rule, value, callback, el) => {
             let imagename = el.form.imagename;
@@ -148,6 +107,8 @@ export default {
             isEditMode: false, // 新增这个属性来标记是否为编辑模式  
             search: "",
             dialogVisible: false,
+            dialogImageUrl: '',
+            imageFile: null,
             isNew: true, // 假设true为新增，false为编辑  
             maxId: 0, // 用于存储从服务器获取的最大ID
             imageUrl: ref(''),
@@ -178,52 +139,19 @@ export default {
     mounted() {
         this.load();
     },
-    created() {
-        this.getMaxId();
-    },
+   
     methods: {
-        getImageUrl(imageId) {
-            return this.$httpURL + `/poemimages/api/get-image/${imageId}`;
+        handleFileChange(event) {
+            this.form.image = event.target.files[0];
+            const file = event.target.files[0];
+            if (file) {
+                // 设置预览图片的 URL
+                this.dialogImageUrl = URL.createObjectURL(file);
+                // 保存文件对象到 imageFile 变量中
+                this.imageFile = file;
+            }
         },
        
-        getMaxId() {
-            request.get("poemimages/api/getMaxId").then(response => {
-                if (response.code === 200) {
-                    this.maxId = response.data.id;
-                    if (this.isNew) {
-                        this.form.id = this.maxId + 1;
-                       
-                    }
-                } else {
-                    this.maxId = 0;
-                    this.form.id = 1; // 如果无法获取最大ID，可以默认从1开始
-                }
-            }).catch(error => {
-                this.maxId = 0;
-                this.form.id = 1; // 错误处理，设置默认值
-            });
-        },
-        beforeUpload(file) {
-            // 校验文件类型
-            const isJPG = file.type === 'image/jpeg';
-            if (!isJPG) {
-                this.$message.error('只能上传 JPG 格式的文件!');
-            }
-            // 校验文件大小
-            const isLt2M = file.size / 1024 / 1024 < 2;
-            if (!isLt2M) {
-                this.$message.error('上传图片大小不能超过 2MB!');
-            }
-            return isJPG && isLt2M;
-        },
-        handleSuccess(response, file) {
-            this.imageUrl = URL.createObjectURL(file.raw);
-            this.$message({
-                message: '图片上传成功！',
-                type: 'success'
-            });
-            
-        },
        
         handleClose(done) {
             this.$confirm('确认关闭？')
@@ -307,13 +235,47 @@ export default {
         },
         resetForm() {
             this.$refs.form.resetFields();
+            this.dialogImageUrl = '';
+            this.imageFile = null;
         },
         doSave() {
-            request.post("poemimages/api/save", this.form).then(res => {
-                console.log(res);
+            // request.post("poemimages/api/save", this.form).then(res => {
+            //     console.log(res);
+            //     if (res.code === 200) {
+            //         this.$message({
+            //             message: '成功添加一条酒画信息！',
+            //             type: 'success',
+            //         });
+            //         this.dialogVisible = false;
+            //         this.load();
+            //         this.resetForm();
+            //     } else {
+            //         this.$message({
+            //             message: '添加酒画信息失败！',
+            //             type: 'error',
+            //         });
+            //     }
+            // });
+            let formData = new FormData();
+            formData.append('iamgename', this.form.imagename); // 添加文本字段
+            
+
+            if (this.imageFile) {
+                formData.append('image', this.imageFile);
+            }
+            console.log(this.imageFile)
+
+            // 调试 log
+            console.log('提交的 FormData:', formData);
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            };
+            request.post("poemimages/api/saveall", formData, config).then(res => {
                 if (res.code === 200) {
                     this.$message({
-                        message: '成功添加一条酒画信息！',
+                        message: '成功添加酒画信息！',
                         type: 'success',
                     });
                     this.dialogVisible = false;
@@ -325,6 +287,12 @@ export default {
                         type: 'error',
                     });
                 }
+            }).catch(error => {
+                console.error('请求失败:', error);
+                this.$message({
+                    message: '请求失败，请稍后重试！',
+                    type: 'error',
+                });
             });
         },
         doMod() {
@@ -350,15 +318,12 @@ export default {
         save() {
             this.$refs["form"].validate((valid) => {
                 if (valid) {
-                    if (this.isEditMode) {
-                        this.doMod()
-                    } else {
-                        // 确保form.image包含上传的图片URL
-                        let formData = new FormData();
-                        formData.append('imagename', this.form.imagename);
-                        formData.append('image', this.form.image); // 假设form.image是文件对象
-                        this.doSave();
-                    }
+                    // if (this.isEditMode) {
+                    //     this.doMod()
+                    // } else {
+                    //     this.doSave();
+                    // }
+                    this.doSave();
                 } else {
                     console.log('表单验证失败');
                     return false;

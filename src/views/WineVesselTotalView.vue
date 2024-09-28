@@ -18,7 +18,7 @@
             <el-table-column prop="discription" label="描述" />
             <el-table-column prop="picture" label="酒器图片">
                 <template v-slot="scope">
-                    <img v-if="scope.row.picture" :src="this.$getimageURL +'/'+ scope.row.picture.split('//').pop()"
+                    <img v-if="scope.row.picture" :src="this.$getimageURL + '/' + scope.row.picture.split('\\').pop()"
                         alt="Image" style="width: 100%; height: auto;" />
                 </template>
             </el-table-column>
@@ -60,38 +60,8 @@
                             :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
-                        <el-upload action="" list-type="picture-card" :auto-upload="false" :before-upload="beforeUpload"
-                            v-model="form.picture" @change="handleUpload">
-                            <el-icon>
-                                <Plus />
-                            </el-icon>
-                            <template #file="{ file }">
-                                <div>
-                                    <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
-                                    <span class="el-upload-list__item-actions">
-                                        <span class="el-upload-list__item-preview"
-                                            @click="handlePictureCardPreview(file)">
-                                            <el-icon><zoom-in /></el-icon>
-                                        </span>
-                                        <span v-if="!disabled" class="el-upload-list__item-delete"
-                                            @click="handleDownload(file)">
-                                            <el-icon>
-                                                <Download />
-                                            </el-icon>
-                                        </span>
-                                        <span v-if="!disabled" class="el-upload-list__item-delete"
-                                            @click="handleRemove(file)">
-                                            <el-icon>
-                                                <Delete />
-                                            </el-icon>
-                                        </span>
-                                    </span>
-                                </div>
-                            </template>
-                        </el-upload>
-                        <!-- <el-dialog v-model="dialogVisible">
-                            <img w-full :src="dialogImageUrl" alt="Preview Image" />
-                        </el-dialog> -->
+                        <input type="file" @change="handleFileChange" accept="image/*" />
+                        <img v-if="dialogImageUrl" :src="dialogImageUrl" alt="Preview">
                     </el-form-item>
                 </el-form>
                 <template #footer>
@@ -108,16 +78,9 @@
 <script>
 
 import request from '@/api/request';
-import { Delete, Download, Plus, ZoomIn } from '@element-plus/icons-vue'
-export default {
 
+export default {
     name: "VesselTotal",
-    components: {
-        Delete,
-        Download,
-        Plus,
-        ZoomIn
-    },
     data() {
         return {
             tableData: [],
@@ -126,33 +89,33 @@ export default {
             total: 0,
             isEditMode: false,
             search: "",
-            dialogImageUrl:'',
-            disabled:false,
-            dialogVisible: false,
+            dialogImageUrl: '',
             imageFile: null,
-            fileList: [],
+            disabled: false,
+            dialogVisible: false,
+
             uploadUrl: 'http://localhost:9000/vesselTotal/api/save',
             imageSrc: null,
             form: {
                 name: '',
                 discription: '',
-                picture: ''
+                picture: null
             },
             rules: {
                 name: [
                     { required: true, message: "请输入酒器名!", trigger: "blur" },
-                    {
-                        validator: (rule, value, callback) => {
-                            this.checkDuplicatename(value, (err) => {
-                                if (err) {
-                                    callback(new Error('酒器已经存在'));
-                                } else {
-                                    callback();
-                                }
-                            });
-                        },
-                        trigger: 'blur'
-                    }
+                    // {
+                    //     validator: (rule, value, callback) => {
+                    //         this.checkDuplicatename(value, (err) => {
+                    //             if (err) {
+                    //                 callback(new Error('酒器已经存在'));
+                    //             } else {
+                    //                 callback();
+                    //             }
+                    //         });
+                    //     },
+                    //     trigger: 'blur'
+                    // }
                 ],
                 discription: [
                     { required: true, message: "请输入酒器描述内容!", trigger: "blur" }
@@ -164,35 +127,24 @@ export default {
             }
         }
     },
+
     mounted() {
         this.load();
-        // this.tableData.forEach(row => {
-        //     this.getImageById(row.id, row);  // 根据 id 获取并设置图片路径
-        // });
     },
 
     methods: {
-        handleUpload(file) {
-            this.imageFile = file.raw; // 将文件直接赋值给 imageFile
-            this.form.picture = file.raw; // 如果你想保留 url
+        handleFileChange(event) {
+            this.form.picture = event.target.files[0];
+            const file = event.target.files[0];
+            if (file) {
+                // 设置预览图片的 URL
+                this.dialogImageUrl = URL.createObjectURL(file);
+                // 保存文件对象到 imageFile 变量中
+                this.imageFile = file;
+            }
         },
-        beforeUpload(file) {
-            console.log('beforeUpload called with file:', file);
-            this.imageFile = file.raw;
-            return false; // 阻止自动上传
-        },  
-       
-        handleRemove(file) {
-            console.log(file);
-        },
-        handlePictureCardPreview(file) {
-            this.dialogImageUrl = file.url;
-            this.dialogVisible = true;
-        },
-        handleDownload(file) {
-            console.log(file);
-        },
-        
+
+
         checkDuplicatename(name, callback) {
             request.get(`/vesselTotal/api/findByname?name=${name}`)
                 .then(res => {
@@ -206,7 +158,7 @@ export default {
                     callback(new Error('检查酒器名时发生错误'));
                 });
         },
-        
+
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
@@ -310,42 +262,60 @@ export default {
         },
         resetForm() {
             this.$refs.form.resetFields();
+            this.dialogImageUrl = '';
+            this.imageFile = null;
             //this.form.picture = '';
-           // this.imageFileList = [];
+            // this.imageFileList = [];
         },
         doSave() {
-            this.checkDuplicatename(this.form.name, (isUnique) => {
-               
-                    console.log(this.form.name)
-                    let formData = new FormData();
-                    formData.append('name', this.form.name); // 添加文本字段
-                    formData.append('discription', this.form.discription); // 添加文本字段
-                    if (this.imageFile) {
-                        formData.append('picture', this.imageFile); // 确保 imageFile 已经被赋值
-                    }
-                    console.log(this.form.picture)
-                    request.post("vesselTotal/api/saveall", formData,{
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
-                        }
-                    }).then(res => {
-                        //console.log(res);
-                        if (res.code === 200) {
-                            this.$message({
-                                message: '成功添加酒器信息！',
-                                type: 'success',
-                            });
-                            this.dialogVisible = false;
-                            this.load();
-                            this.resetForm();
-                        } else {
-                            this.$message({
-                                message: '添加酒器信息失败！',
-                                type: 'error',
-                            });
-                        }
+            // this.checkDuplicatename(this.form.name, (isUnique) => {
+            //  if (!isUnique) {
+            //     this.$message({
+            //          message: '酒器名称重复，请重新输入！',
+            //          type: 'error'
+            //     });
+            //     return;
+            //  }
+            
+            let formData = new FormData();
+            formData.append('name', this.form.name); // 添加文本字段
+            formData.append('discription', this.form.discription); // 添加文本字段
+
+            if (this.imageFile) {
+                formData.append('picture', this.imageFile);
+            }
+            console.log(this.imageFile)
+
+            // 调试 log
+            console.log('提交的 FormData:', formData);
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            };
+            request.post("vesselTotal/api/saveall", formData, config).then(res => {
+                if (res.code === 200) {
+                    this.$message({
+                        message: '成功添加酒器信息！',
+                        type: 'success',
                     });
+                    this.dialogVisible = false;
+                    this.load();
+                    this.resetForm();
+                } else {
+                    this.$message({
+                        message: '添加酒器信息失败！',
+                        type: 'error',
+                    });
+                }
+            }).catch(error => {
+                console.error('请求失败:', error);
+                this.$message({
+                    message: '请求失败，请稍后重试！',
+                    type: 'error',
+                });
             });
+
         },
         doMod() {
             request.post("vesselTotal/api/mod", this.form).then(res => {
@@ -371,7 +341,7 @@ export default {
             this.$refs["form"].validate((valid) => {
                 console.log(this.form.name)
                 console.log(this.form.discription)
-                console.log(this.form.picture)
+                console.log(this.imageFile)
                 if (valid) {
                     // if (this.isEditMode) {
                     //     this.doMod()
@@ -416,5 +386,12 @@ export default {
     width: 178px;
     height: 178px;
     display: block;
+}
+
+.avatar-uploader img {
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    padding: 4px;
+    margin-top: 10px;
 }
 </style>

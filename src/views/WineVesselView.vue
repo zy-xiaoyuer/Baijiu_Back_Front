@@ -20,7 +20,8 @@
             <el-table-column prop="now" label="现藏" />
             <el-table-column prop="picture" label="酒器图片">
                 <template v-slot="scope">
-                    <img :src="getImageUrl(scope.row.id)" style="width: 100%; height: auto;">
+                    <img v-if="scope.row.picture" :src="this.$getimageURL + '/' + scope.row.picture.split('\\').pop()"
+                        alt="Image" style="width: 100%; height: auto;" />
                 </template>
             </el-table-column>
             <el-table-column fixed="right" label="操 作" width="260">
@@ -52,9 +53,9 @@
             <el-dialog v-model="dialogVisible" title="酒器信息" style="height:90%;width:50%;" :before-close="handleClose">
 
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label="id:" prop="id">
+                    <!-- <el-form-item label="id:" prop="id">
                         <el-input v-model="form.id" style="width: 80%;" clearable :disabled="!isEditMode" />
-                    </el-form-item>
+                    </el-form-item> -->
                     <el-form-item label="朝代:" prop="age">
                         <el-input v-model="form.age" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
@@ -62,13 +63,8 @@
                         <el-input v-model="form.now" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
                     <el-form-item label="酒器图片:" prop="picture">
-                        <el-upload :action="uploadURL" :on-preview="handlePreview" :on-remove="handleRemove"
-                            list-type="picture" :headers="headerObj" :on-success="handleSuccess">
-                            <el-button size="small" type="primary">点击上传</el-button>
-                        </el-upload>
-                        <el-dialog title="图片预览" v-model="previewVisible" width="50%">
-                            <img :src="previewPath" alt="" class="previewImg">
-                        </el-dialog>
+                        <input type="file" @change="handleFileChange" accept="image/*" />
+                        <img v-if="dialogImageUrl" :src="dialogImageUrl" alt="Preview">
                     </el-form-item>
 
                 </el-form>
@@ -97,6 +93,8 @@ export default {
             isEditMode: false,
             search: "",
             dialogVisible: false,
+            dialogImageUrl: '',
+            imageFile: null,
             uploadUrl: '/upload', // 你的图片上传接口
             imageFileList: [], // 用于存储已上传的图片列表
             form: {
@@ -125,29 +123,17 @@ export default {
     },
 
     methods: {
-        // 图片上传成功后的回调
-        handleSuccess(response, file, fileList) {
-            if (response.code === 200) {
-                this.form.picture = response.data.url; // 假设返回的是图片的URL
-            } else {
-                this.$message.error('图片上传失败');
+        handleFileChange(event) {
+            this.form.picture = event.target.files[0];
+            const file = event.target.files[0];
+            if (file) {
+                // 设置预览图片的 URL
+                this.dialogImageUrl = URL.createObjectURL(file);
+                // 保存文件对象到 imageFile 变量中
+                this.imageFile = file;
             }
         },
-        beforeUpload(file) {
-            const isImage = file.type.match('image.*');
-            if (!isImage) {
-                this.$message.error('请上传图片格式的文件');
-            }
-            return isImage;
-        },
-        // 移除图片时的钩子
-        handleRemove(file, fileList) {
-            // 可以在这里实现删除图片的逻辑
-        },
-        
-        getImageUrl(imageId) {
-            return this.$httpURL + `/vessel/api/get-image/${imageId}`;
-        },
+       
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
@@ -251,28 +237,65 @@ export default {
         },
         resetForm() {
             this.$refs.form.resetFields();
-            this.form.picture = '';
-            this.imageFileList = [];
+            this.dialogImageUrl = '';
+            this.imageFile = null;
         },
         doSave() {
-            
-            request.post("vessel/api/save", this.form).then(res => {
-             //console.log(res);
-                        if (res.code === 200) {
-                            this.$message({
-                                message: '成功添加酒器信息！',
-                                type: 'success',
-                            });
-                            this.dialogVisible = false;
-                            this.load();
-                            this.resetForm();
-                        } else {
-                            this.$message({
-                                message: '添加酒器信息失败！',
-                                type: 'error',
-                            });
-                        }
+            // request.post("vessel/api/save", this.form).then(res => {
+            //  //console.log(res);
+            //             if (res.code === 200) {
+            //                 this.$message({
+            //                     message: '成功添加酒器信息！',
+            //                     type: 'success',
+            //                 });
+            //                 this.dialogVisible = false;
+            //                 this.load();
+            //                 this.resetForm();
+            //             } else {
+            //                 this.$message({
+            //                     message: '添加酒器信息失败！',
+            //                     type: 'error',
+            //                 });
+            //             }
+            //         });
+            let formData = new FormData();
+            formData.append('age', this.form.age); // 添加文本字段
+            formData.append('now', this.form.now); // 添加文本字段
+
+            if (this.imageFile) {
+                formData.append('picture', this.imageFile);
+            }
+            console.log(this.imageFile)
+
+            // 调试 log
+            console.log('提交的 FormData:', formData);
+            const config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            };
+            request.post("vessel/api/saveall", formData, config).then(res => {
+                if (res.code === 200) {
+                    this.$message({
+                        message: '成功添加酒器信息！',
+                        type: 'success',
                     });
+                    this.dialogVisible = false;
+                    this.load();
+                    this.resetForm();
+                } else {
+                    this.$message({
+                        message: '添加酒器信息失败！',
+                        type: 'error',
+                    });
+                }
+            }).catch(error => {
+                console.error('请求失败:', error);
+                this.$message({
+                    message: '请求失败，请稍后重试！',
+                    type: 'error',
+                });
+            });
         },
         doMod() {
             request.post("vessel/api/mod", this.form).then(res => {
@@ -298,11 +321,12 @@ export default {
             this.$refs["form"].validate((valid) => {
 
                 if (valid) {
-                    if (this.isEditMode) {
-                        this.doMod()
-                    } else {
-                        this.doSave();
-                    }
+                    // if (this.isEditMode) {
+                    //     this.doMod()
+                    // } else {
+                    //     this.doSave();
+                    // }
+                    this.doSave();
                 } else {
                     console.log('表单验证失败');
                     return false;
