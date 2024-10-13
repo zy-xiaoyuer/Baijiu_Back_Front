@@ -20,6 +20,10 @@ const routes: Array<RouteRecordRaw> = [
     name: 'HomeView',
     component: HomeView,
     children: [  
+       {  
+          path: '',  
+          component: WelcomeView
+        },
         {  
           path: '/userinfo',  
           component: UserList
@@ -44,10 +48,7 @@ const routes: Array<RouteRecordRaw> = [
           path: '/winelocation',  
           component:LocationWinePoemView
         },
-        {  
-          path:'',  //默认子路由
-          component:WelcomeView
-        },
+        
       ]  
   },
   

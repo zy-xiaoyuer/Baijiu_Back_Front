@@ -1,15 +1,13 @@
 <template>
     <div>
-        <div style="margin:10px px;margin-top:0px">
-            <el-button type="primary" @click="add"><el-icon>
-                    <DocumentAdd />
-                </el-icon>新增酒诗</el-button>
-        </div>
         <div style="margin:10px 0px;">
             <el-input v-model="search" clearable placeholder="请输入您要搜索的酒诗的作者或朝代" style="width:25%;"
                 :prefix-icon="Search" />
             <span style="margin-left: 10px;"></span>
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
+            <el-button type="success" @click="add"><el-icon>
+                    <DocumentAdd />
+                </el-icon>新增酒诗</el-button>
         </div>
 
         <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
@@ -20,9 +18,29 @@
             <el-table-column prop="author" label="作者" width="60" />
             <el-table-column prop="place" label="地点" width="50" />
             <el-table-column prop="time" label="创作年份" width="50" />
-            <el-table-column prop="content" label="内容" />
+            <el-table-column prop="content" label="内容" min-width="150" class="content-column">
+                <template v-slot="scope">
+                    <div class="cell">
+                        <div class="ellipsis">{{ scope.row.content }}</div>
+                        <div class="tooltip-div">
+                            <div class="tooltip-text">{{ scope.row.content }}</div>
+                        </div>
+
+                    </div>
+                </template>
+            </el-table-column>
+
             <el-table-column prop="emotion" label="总体情感" width="50" />
-            <el-table-column prop="emotionList" label="每句对应情感" width="90" />
+            <el-table-column prop="emotionList" label="每句对应情感" min-width="150" class="content-column">
+                <template v-slot="scope">
+                    <div class="cell">
+                        <div class="ellipsis">{{ scope.row.emotionList }}</div>
+                        <div class="tooltip-div">
+                            <div class="tooltip-text">{{ scope.row.emotionList }}</div>
+                        </div>
+                    </div>
+                </template>
+            </el-table-column>
             <el-table-column fixed="right" label="操 作" width="200">
                 <template v-slot="scope">
                     <el-button type="success" size="small" @click="look(scope.row)">
@@ -51,6 +69,9 @@
         <div>
             <el-dialog v-model="dialogVisible" title="酒诗信息" style="height:100%;width:80%;" :before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
+                    <el-form-item label="ID:" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable disabled />
+                    </el-form-item>
                     <el-form-item label="标题:" prop="title">
                         <el-input v-model="form.title" style="width: 80%;" clearable :disabled="!isEditMode" />
                     </el-form-item>
@@ -96,15 +117,19 @@ import request from '@/api/request';
 export default {
     name: "DynastyPoems",
     data() {
-        
         return {
             tableData: [],
             pageNum: 1,
             pageSize: 8,
             total: 0,
             isEditMode: false, 
+            isAddMode: false,
             search: "",
             dialogVisible: false,
+            //originalRow: '',
+            nextIdCounter: 1,
+            originalnameData: [], // 存储用户名原始数据
+            originalUsername: '',
             form: {
                 id: '',
                 title: '',
@@ -119,17 +144,6 @@ export default {
             rules: {
                 title: [
                     { required: true, message: "请输入酒诗标题!", trigger: "blur" },
-                    {
-                        validator: (rule, value, callback) => {
-                            this.checkDuplicateTitle(value, (err) => {
-                                if (err) {
-                                    callback(new Error('酒诗已经存在'));
-                                } else {
-                                    callback();
-                                }
-                            });
-                        }, trigger: 'blur'
-                    }
                 ],
                 dynasty: [
                     { required: true, message: "请输入酒诗朝代!", trigger: "blur" }
@@ -157,28 +171,21 @@ export default {
     },
     mounted() {
         this.load();
+        request.get(`/poemsbydynasty/api/total`).then(res => {
+            this.nextIdCounter = res + 1;
+        })
+        this.nextIdCounter++;
     },
 
     methods: {
-        checkDuplicateTitle(title, callback) {
-            request.get(`/poemsbydynasty/api/findByTitle?title=${title}`)
-                .then(res => {
-                    if (res.code === 200) {
-                        callback(new Error('酒诗已经存在'));
-                    } else {
-                        callback();
-                    }
-                })
-                .catch(() => {
-                    callback(new Error('检查酒诗标题时发生错误'));
-                });
-        },
+       
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_=> {
                     this.dialogVisible = false;
                     this.$nextTick(() => {
                         this.resetForm();
+                        this.isEditMode = false
                     })
                     done();
                 })
@@ -201,10 +208,15 @@ export default {
                     //console.log(res.data.dynasty)
                     if (res.code === 200) {
                         this.tableData = res.data;
+                        console.log(res.total)
                         this.total = res.total;
-                        res.data.forEach(poem => {
-                            console.log(poem.dynasty);
-                        });  
+                        
+                        this.originalnameData = res.data.map(poems => poems.title);
+                        console.log(this.originalnameData);
+                        //this.total = res.total;
+                        // res.data.forEach(poem => {
+                        //     console.log(poem.dynasty);
+                        // });  
                     } else {
                         alert('数据获取失败：' + res.msg);
                     }
@@ -224,16 +236,18 @@ export default {
             this.load();
         },
         add() {
+            this.isAddMode = true;
             this.isEditMode = true;
             this.dialogVisible = true;
             this.$nextTick(() => {
                 this.resetForm();
             })
-
+            this.form.id = this.nextIdCounter;
         },
         mod(row) {
             console.log(row);
             if (row.id) {
+                this.isAddMode = false;
                 this.isEditMode = true; 
                 this.form.id = row.id; 
                 this.form.title = row.title; 
@@ -244,6 +258,7 @@ export default {
                 this.form.content = row.content;
                 this.form.emotion = row.emotion;
                 this.form.emotionList = row.emotionList;
+                //this.originalRow = JSON.parse(JSON.stringify(this.form)); 
                 this.dialogVisible = true;
                 
             }
@@ -251,6 +266,7 @@ export default {
         look(row) {
             if (row.id) {
                 this.$nextTick(() => {
+                    this.isAddMode = false;
                     this.isEditMode = false;
                     this.form.id = row.id;
                     this.form.title = row.title;
@@ -289,52 +305,39 @@ export default {
             this.$refs.form.resetFields();
         },
         doSave() {
-            this.checkDuplicateTitle(this.form.title, (isUnique) => {
-                if (isUnique) {
-                    request.post("poemsbydynasty/api/save", this.form).then(res => {
-                        console.log(res);
-                        if (res.code === 200) {
-                            this.$message({
-                                message: '成功添加酒诗信息！',
-                                type: 'success',
-                            });
-                            this.dialogVisible = false;
-                            this.load();
-                            this.resetForm();
-                        } else {
-                            this.$message({
-                                message: '添加酒诗信息失败！',
-                                type: 'error',
-                            });
-                        }
+            request.post("poemsbydynasty/api/save", this.form).then(res => {
+                if (res.code === 200) {
+                    this.$message({
+                        message: '成功添加酒诗信息！',
+                        type: 'success',
                     });
+                    this.dialogVisible = false;
+                    this.load();
+                    this.resetForm();
                 } else {
-                    alert('酒诗已存在');
+                    this.$message({
+                        message: '添加酒诗信息失败！',
+                        type: 'error',
+                    });
                 }
             });
         },
         doMod() {
-            this.checkDuplicateTitle(this.form.title, (isUnique) => {
-                if (isUnique) {
-                    request.post("poemsbydynasty/api/mod", this.form).then(res => {
-                        console.log(res);
-                        if (res.code === 200) {
-                            this.$message({
-                                message: '成功修改酒诗信息！',
-                                type: 'success',
-                            });
-                            this.dialogVisible = false;
-                            this.load();
-                            this.resetForm();
-                        } else {
-                            this.$message({
-                                message: '修改酒诗信息失败！',
-                                type: 'error',
-                            });
-                        }
+            request.post("poemsbydynasty/api/mod", this.form).then(res => {
+                console.log(res);
+                if (res.code === 200) {
+                    this.$message({
+                        message: '成功修改酒诗信息！',
+                        type: 'success',
                     });
+                    this.dialogVisible = false;
+                    this.load();
+                    this.resetForm();
                 } else {
-                    alert('酒诗名已存在');
+                    this.$message({
+                        message: '修改酒诗信息失败！',
+                        type: 'error',
+                    });
                 }
             });
         },
@@ -342,10 +345,33 @@ export default {
             this.$refs["form"].validate((valid) => {
                 
                 if (valid) {
-                    if (this.isEditMode) {
-                        this.doMod()
+                    if (this.isAddMode) {
+                        request.post("poemsbydynasty/api/checkTitle", { title: this.form.title }).then(res => {
+                            if (res.code === 200) {
+                                this.doSave();
+                            } else {
+                                this.$message({
+                                    message: '酒诗已存在，添加酒诗信息失败！',
+                                    type: 'error',
+                                });
+                            }
+                        });
                     } else {
-                        this.doSave();
+                        const originalname = this.originalnameData.find(title => this.form.id === this.tableData.find(poems => poems.title === title).id);
+                        if (originalname === this.form.title) {
+                            this.doMod();
+                        } else {
+                            request.post("poemsbydynasty/api/checkTitle", { title: this.form.title }).then(res => {
+                                if (res.code === 200) {
+                                    this.doMod();
+                                } else {
+                                    this.$message({
+                                        message: '酒诗已存在，修改酒诗信息失败！',
+                                        type: 'error',
+                                    });
+                                }
+                            });
+                        }
                     }
                 } else {
                     console.log('表单验证失败');
@@ -358,4 +384,41 @@ export default {
 }
 </script>
 
-<style></style>
+<style>
+
+.el-table .content-column {
+    height: auto;
+    overflow: hidden;
+}
+
+.ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+
+.tooltip-div {
+    display: none;
+    position: absolute;
+    background-color: #f4ecec;
+    border: 1px solid #dcdfe6;
+    padding: 10px;
+    z-index: 1001;
+    color: blue;
+    opacity: 0;  /* 确保悬浮框是不透明的 */
+    transition: opacity 0.3s;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+}
+   .tooltip-text {
+    color: blue;
+    font-size: larger;
+    font-weight: bold;
+   }
+.cell:hover .tooltip-div {
+    display: block;
+    opacity: 1;
+}
+</style>
+

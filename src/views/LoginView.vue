@@ -46,7 +46,7 @@ export default {
                             .then(response => {
                                 if (response.code === 200) {
                                     alert('登录成功！');
-                                    this.$router.push({ name: 'HomeView' });
+                                    this.$router.push({ path: '/home' });
                                 } else {
                                     alert('登录失败，用户名或密码错误！');
                                 }
@@ -82,13 +82,16 @@ export default {
     margin: 0;
     padding: 0;
     background-image: linear-gradient(to right, #fbc2eb, #a6c1ee);
+    background-image: url('/src/assets/foot.png');
+        /* 替换为你的图片路径 */
 }
 
 .login-form {
     width: 350px;
     border-radius: 15px;
     padding: 10px;
-    background: #ffffff;
+    background: #cac3c3;
+    background-image: url('/src/assets/background.jpg');
     box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
 }
 

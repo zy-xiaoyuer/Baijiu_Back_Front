@@ -1,20 +1,16 @@
 <template>
     <div style="height:auto">
-        <div style="margin:10px px;margin-top:0px">
-            <el-button type="primary" @click="add"><el-icon>
-                    <DocumentAdd />
-                </el-icon>新增用户</el-button>
-        </div>
-
         <div style="margin:10px 0px;">
             <el-input v-model="search" clearable placeholder="请输入您要搜索的用户名" style="width:25%;" :prefix-icon="Search" />
             <span style="margin-left: 10px;"></span>
             <el-button type="primary" clearable @click="load">搜&nbsp;&nbsp;&nbsp;索</el-button>
+            <el-button type="success" @click="add"><el-icon>
+                    <DocumentAdd />
+                </el-icon>新增用户</el-button>
         </div>
 
-        <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555'}"
+        <el-table :data="tableData" style="width: 100%" :header-cell-style="{ background: '#f2f5fc', color: '#55555' }"
             border>
-            <!-- <el-table-column prop="id" label="用户ID" width="40" /> -->
             <el-table-column prop="username" label="用户名" />
             <el-table-column prop="nickname" label="昵称" />
             <el-table-column prop="sex" label="性别" width="60">
@@ -54,8 +50,8 @@
         <div>
             <el-dialog v-model="dialogVisible" title="用户信息" width="30%" :before-close="handleClose">
                 <el-form :model="form" label-width="120px" :rules="rules" ref="form">
-                    <el-form-item label=":" prop="id">
-                        <el-input v-model="form.id" style="width: 80%;" clearable :disabled="!isEditMode" />
+                    <el-form-item label="ID:" prop="id">
+                        <el-input v-model="form.id" style="width: 80%;" clearable disabled />
                     </el-form-item>
                     <el-form-item label="用户名:" prop="username">
                         <el-input v-model="form.username" style="width: 80%;" clearable :disabled="!isEditMode" />
@@ -95,27 +91,16 @@
 <script>
 
 import request from '@/api/request';
-
 export default {
     name: "UserHome",
-
     mounted() {
         this.load();
+        request.get(`/users/api/total`).then(res => {
+            this.nextIdCounter = res + 1;
+        })
+        this.nextIdCounter++;
     },
     methods: {
-        checkDuplicateUsername(username, callback) {
-            request.get(`/users/api/findByUsername?username=${username}`)
-                .then(res => {
-                    if (res.code === 200) {
-                        callback(new Error('账号已经存在'));
-                    } else {
-                        callback();
-                    }
-                })
-                .catch(() => {
-                    callback(new Error('检查用户名时发生错误'));
-                });
-        },
         handleClose(done) {
             this.$confirm('确认关闭？')
                 .then(_ => {
@@ -145,6 +130,9 @@ export default {
                     console.log(res)
                     if (res.code === 200) {
                         this.tableData = res.data;
+                        // 保存每个用户的原始数据
+                        this.originalnameData = res.data.map(user => user.username);
+                        console.log(this.originalnameData);
                         this.total = res.total;
                     } else {
                         alert('数据获取失败：' + res.msg);
@@ -165,33 +153,38 @@ export default {
             this.load();
         },
         add() {
+            this.isAddMode = true;
             this.isEditMode = true;
             this.dialogVisible = true;
             this.$nextTick(() => {
                 this.resetForm();
             })
+            this.form.id = this.nextIdCounter;
+
         },
         mod(row) {
             if (row.id) {
                 this.$nextTick(() => {
+                    this.isAddMode = false;
                     this.isEditMode = true;
                     this.form.id = row.id;
                     this.form.username = row.username;
                     this.form.password = row.password;
                     this.form.nickname = row.nickname;
                     this.form.sex = row.sex + '';
-                    this.form.age = row.age,
-                        this.form.phone = row.phone,
-                        this.form.email = row.email;
+                    this.form.age = row.age + '',
+                    this.form.phone = row.phone,
+                    this.form.email = row.email;
+                   
                     this.dialogVisible = true;
                 })
             }
         },
 
-
         look(row) {
             if (row.id) {
                 this.$nextTick(() => {
+                    this.isAddMode = false;
                     this.isEditMode = false;
                     this.form.id = row.id;
                     this.form.username = row.username;
@@ -228,64 +221,76 @@ export default {
         resetForm() {
             this.$refs.form.resetFields();
         },
+
         doSave() {
-            this.checkDuplicateUsername(this.form.username, (isUnique) => {
-                if (isUnique) {
-                    request.post("users/api/save", this.form).then(res => {
-                        console.log(res);
-                        if (res.code === 200) {
-                            this.$message({
-                                message: '成功添加用户信息！',
-                                type: 'success',
-                            });
-                            this.dialogVisible = false;
-                            this.load();
-                            this.resetForm();
-                        } else {
-                            this.$message({
-                                message: '添加用户信息失败！',
-                                type: 'error',
-                            });
-                        }
+            request.post("users/api/save", this.form).then(res => {
+                if (res.code === 200) {
+                    this.$message({
+                        message: '成功添加用户信息！',
+                        type: 'success',
                     });
+                    this.dialogVisible = false;
+                    this.load();
+                    this.resetForm();
                 } else {
-                    alert('用户名已存在，请选择其他用户名。');
+                    this.$message({
+                        message: '添加用户信息失败！',
+                        type: 'error',
+                    });
                 }
             });
         },
         doMod() {
-            this.checkDuplicateUsername(this.form.username, (isUnique) => {
-                if (isUnique) {
-                    request.post("users/api/mod", this.form).then(res => {
-                        console.log(res);
-                        if (res.code === 200) {
-                            this.$message({
-                                message: '成功修改用户信息！',
-                                type: 'success',
-                            });
-                            this.dialogVisible = false;
-                            this.load();
-                            this.resetForm();
-                        } else {
-                            this.$message({
-                                message: '修改用户信息失败！',
-                                type: 'error',
-                            });
-                        }
+            request.post("users/api/mod", this.form).then(res => {
+                console.log(res);
+                if (res.code === 200) {
+                    this.$message({
+                        message: '成功修改用户信息！',
+                        type: 'success',
                     });
+                    this.dialogVisible = false;
+                    this.load();
+                    this.resetForm();
                 } else {
-                    alert('用户名已存在，请选择其他用户名。');
+                    this.$message({
+                        message: '修改用户信息失败！',
+                        type: 'error',
+                    });
                 }
             });
-
         },
         save() {
             this.$refs["form"].validate((valid) => {
                 if (valid) {
-                    if (this.isEditMode) {
-                        this.doMod()
+                    if (this.isAddMode) {
+                        request.post("users/api/checkUsername", { username: this.form.username }).then(res => {
+                            if (res.code === 200) {
+                                this.doSave();
+                            } else {
+                                this.$message({
+                                    message: '用户已存在，添加用户信息失败！',
+                                    type: 'error',
+                                });
+                            }
+                        });
                     } else {
-                        this.doSave();
+                        const originalUsername = this.originalnameData.find(name => this.form.id === this.tableData.find(user => user.username === name).id);
+                        if (originalUsername === this.form.username) {
+                            // 用户名没有变化，直接保存修改
+                            this.doMod();
+                        } else {
+                            // 用户名变化了，需要检查用户名是否存在
+                            request.post("users/api/checkUsername", { username: this.form.username }).then(res => {
+                                if (res.code === 200) {
+                                    this.doMod();
+                                } else {
+                                    this.$message({
+                                        message: '用户已存在，修改用户信息失败！',
+                                        type: 'error',
+                                    });
+                                }
+                            });
+                        }
                     }
                 } else {
                     console.log('表单验证失败');
@@ -295,23 +300,20 @@ export default {
         }
     },
     data() {
-        let checkAge = (rule, value, callback) => {
-            if (value > 150) {
-                callback(new Error('年龄输入过大'));
-            }
-            else {
-                callback();
-            }
-        };
 
         return {
             tableData: [],
             pageNum: 1,
             pageSize: 8,
             total: 0,
+            //usernameExists: false,
+            isAddMode: false,
             isEditMode: false, //false:查看；true：编辑
             search: "",
             dialogVisible: false,
+            nextIdCounter: 1,
+            originalnameData: [], // 存储用户名原始数据
+            originalUsername: '',
             form: {
                 id: '',
                 username: '',
@@ -321,23 +323,10 @@ export default {
                 age: '',
                 phone: '',
                 email: ''
-
             },
             rules: {
                 username: [
                     { required: true, message: "请输入用户名!", trigger: "blur" },
-                    {
-                        validator: (rule, value, callback) => {
-                            this.checkDuplicateUsername(value, (err) => {
-                                if (err) {
-                                    callback(new Error('账号已经存在'));
-                                } else {
-                                    callback();
-                                }
-                            });
-                        }
-                        , trigger: 'blur'
-                    }
                 ],
                 password: [
                     { required: true, message: "请输入密码!", trigger: "blur" }
@@ -350,13 +339,9 @@ export default {
                 ],
                 age: [
                     { message: "请输入年龄！", trigger: "blur" },
-                    { min: 1, max: 3, message: "长度在1到三位", trigger: "blur" },
-                    { pattern: /^([1-9][0-9]*){1,3}$/, message: '年龄必须为正整数', trigger: "blur" },
-                    { validator: checkAge, trigger: 'blur' }
                 ],
                 phone: [
                     { required: true, message: "请输入手机号！", trigger: "blur" },
-                    { pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: '请输入正确的手机号', trigger: "blur" },
                 ],
                 email: [
                     { message: "请输入邮箱!", trigger: "blur" }
